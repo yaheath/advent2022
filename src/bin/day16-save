@@ -1,0 +1,254 @@
+#[macro_use] extern crate lazy_static;
+use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap};
+use std::str::FromStr;
+use std::vec::Vec;
+use regex::Regex;
+extern crate advent2022;
+use advent2022::read::read_input;
+
+#[derive(Clone)]
+struct Valve {
+    name: String,
+    rate: i32,
+    neighbors: Vec<String>,
+}
+
+impl FromStr for Valve {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        lazy_static! {
+            static ref RE: Regex = Regex::new(r"Valve (\w+).*rate=(\d+).*valves? (.*)").unwrap();
+        }
+        if let Some(caps) = RE.captures(s) {
+            Ok(Valve {
+                name: caps.get(1).unwrap().as_str().into(),
+                rate: caps.get(2).unwrap().as_str().parse::<i32>().unwrap(),
+                neighbors: caps.get(3).unwrap().as_str().split(", ").map(|s| s.into()).collect(),
+            })
+        }
+        else {
+            Err("Invalid input line".into())
+        }
+    }
+}
+
+type Step = i32;
+type Flow = i32;
+
+const MAX_STEPS:Step = 30;
+
+#[derive(Clone, Eq, PartialEq)]
+struct State {
+    location: String,
+    e_location: String,
+    opened: String,
+    step: Step,
+    total_release: Flow,
+    //hist: String,
+}
+
+impl State {
+    fn calc_total_release(opened:&String, valves:&HashMap<String,Valve>) -> Flow {
+        opened.split(';').map(|s| {
+            let mut itr = s.split(',');
+            let valve:String = itr.next().unwrap().into();
+            let step:Step = itr.next().unwrap().parse::<i32>().unwrap();
+            (MAX_STEPS - step) * valves[&valve].rate
+        }).sum()
+    }
+    fn open_valve(&self, valve: &String, all_valves: &HashMap<String,Valve>) -> State {
+        let opened:String = if self.opened.is_empty() {
+            format!("{},{}", valve, self.step)
+        } else {
+            format!("{};{},{}", self.opened, valve, self.step)
+        };
+        let total_release = Self::calc_total_release(&opened, all_valves);
+        //let hist = self.hist.clone() + " o" + valve;
+        State {
+            location: self.location.clone(),
+            e_location: self.location.clone(),
+            opened: opened,
+            step: self.step,
+            total_release: total_release,
+            //hist: hist,
+        }
+    }
+    fn move_to(&self, valve: &String, e_valve: &String) -> State {
+        /*
+        let mut hist = self.hist.clone();
+        if *valve != self.location {
+            hist += " m";
+            hist += valve;
+        }
+        if *e_valve != self.e_location {
+            hist += " e";
+            hist += valve;
+        }
+        */
+        State {
+            location: valve.clone(),
+            e_location: e_valve.clone(),
+            opened: self.opened.clone(),
+            step: self.step,
+            total_release: self.total_release,
+            //hist: hist,
+        }
+    }
+    fn advance(&mut self) {
+        self.step += 1;
+    }
+    fn valve_is_open(&self, valve: &String) -> bool {
+        match self.opened.split(';').map(|s| s.split(',').next().unwrap()).find(|v| v == valve) {
+            Some(_) => true,
+            None => false,
+        }
+    }
+    /*
+    fn opened_valves(&self) -> HashMap<String,Step> {
+        self.opened.split(';').map(|s| {
+            let mut itr = s.split(',');
+            let key = itr.next().unwrap().into();
+            (key, itr.next().unwrap().parse::<i32>().unwrap())
+        }).collect()
+    }
+    */
+    fn n_opened(&self) -> usize {
+        self.opened.split(';').count()
+    }
+    fn traverse_key(&self) -> String {
+        self.location.clone() + ":" + &self.opened
+    }
+    fn e_traverse_key(&self) -> String {
+        self.e_location.clone() + ":" + &self.opened
+    }
+}
+
+impl Ord for State {
+    fn cmp(&self, other: &State) -> Ordering {
+        other.total_release.cmp(&self.total_release)
+            .then_with(|| other.step.cmp(&self.step))
+            .then_with(|| other.opened.cmp(&self.opened))
+            .then_with(|| other.location.cmp(&self.location))
+            .then_with(|| other.e_location.cmp(&self.e_location))
+    }
+}
+
+// `PartialOrd` needs to be implemented as well.
+impl PartialOrd for State {
+    fn partial_cmp(&self, other: &State) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+fn search(valves: &HashMap<String,Valve>, with_e:bool) -> (String, Flow) {
+    let mut traversed: HashMap<String,Flow> = HashMap::new();
+    let mut e_traversed: HashMap<String,Flow> = HashMap::new();
+    let mut heap: BinaryHeap<State> = BinaryHeap::new();
+    heap.push(State {
+        location: "AA".into(),
+        e_location: "AA".into(),
+        opened: "".into(),
+        step: if with_e { 5 } else { 1 },
+        total_release: 0,
+        //hist: "".into(),
+    });
+    let openable_valves = valves.iter().filter(|(_,v)| v.rate > 0).count();
+
+    while let Some(state) = heap.pop() {
+        /*
+        if with_e {
+        println!("at: {} elephant_at: {} opened: {} step: {} total: {}",
+            state.location, state.e_location, state.opened, state.step, state.total_release);
+        }
+        */
+        if (
+            traversed.contains_key(&state.traverse_key()) &&
+            state.total_release <= traversed[&state.traverse_key()]
+        ) && (!with_e || (
+            e_traversed.contains_key(&state.e_traverse_key()) &&
+            state.total_release > e_traversed[&state.e_traverse_key()]
+        )) {
+            continue;
+        }
+        traversed.insert(state.traverse_key(), state.total_release);
+        if with_e {
+            e_traversed.insert(state.e_traverse_key(), state.total_release);
+        }
+
+        if state.step == MAX_STEPS { continue; }
+        if state.n_opened() == openable_valves { continue; }
+
+        let mut new_states: Vec<State> = Vec::new();
+        let mut new_e_states: Vec<State> = Vec::new();
+
+        let mut elephant = |st:&State| {
+            if !st.valve_is_open(&st.e_location) &&
+                valves[&st.e_location].rate > 0 {
+                    let mut newestate = st.open_valve(&st.e_location, valves);
+                    newestate.advance();
+                    new_e_states.push(newestate);
+            }
+            for loc in &valves[&st.e_location].neighbors {
+                let mut newestate = st.move_to(&st.location, loc);
+                newestate.advance();
+                new_e_states.push(newestate);
+            }
+        };
+
+        if !state.valve_is_open(&state.location) &&
+            valves[&state.location].rate > 0 {
+                let mut newstate = state.open_valve(&state.location, valves);
+                if with_e {
+                    elephant(&newstate);
+                } else {
+                    newstate.advance();
+                    new_states.push(newstate);
+                }
+        }
+
+        for loc in &valves[&state.location].neighbors {
+            let mut newstate = state.move_to(loc, &state.e_location);
+            if with_e {
+                elephant(&newstate);
+            } else {
+                newstate.advance();
+                new_states.push(newstate);
+            }
+        }
+
+        for s in new_states.iter().chain(new_e_states.iter()) {
+            if (
+                !traversed.contains_key(&s.traverse_key()) ||
+                s.total_release > traversed[&s.traverse_key()]
+            ) || (with_e && (
+                !e_traversed.contains_key(&s.e_traverse_key()) ||
+                s.total_release > e_traversed[&s.e_traverse_key()]
+            )) {
+                heap.push(s.clone());
+            }
+        }
+    }
+    println!("{} traversed", traversed.len() + e_traversed.len());
+    let result = traversed.iter().chain(e_traversed.iter()).max_by(|a,b| a.1.cmp(&b.1)).unwrap();
+    (result.0.clone(), *result.1)
+}
+
+fn part1(input: &HashMap<String,Valve>) {
+    let (_sequence, value) = search(input, false);
+    println!("Part 1 sequence: {}", _sequence);
+    println!("Part 1: {}", value);
+}
+
+fn part2(input: &HashMap<String,Valve>) {
+    let (_sequence, value) = search(input, true);
+    println!("Part 2 sequence: {}", _sequence);
+    println!("Part 2: {}", value);
+}
+
+fn main() {
+    let input: Vec<Valve> = read_input::<Valve>();
+    let valves: HashMap<String, Valve> = input.iter().map(|r| (r.name.clone(), r.clone())).collect();
+    part1(&valves);
+    part2(&valves);
+}
