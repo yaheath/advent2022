@@ -1,6 +1,6 @@
-#[macro_use] extern crate lazy_static;
 use std::vec::Vec;
 use std::str::FromStr;
+use lazy_static::lazy_static;
 use regex::Regex;
 use advent_lib::read::read_sectioned_input;
 
@@ -20,7 +20,12 @@ impl FromStr for StackRow {
         lazy_static! {
             static ref RE: Regex = Regex::new(r"^.(\w| )...(\w| )...(\w| )...(\w| )...(\w| )...(\w| )...(\w| )...(\w| )...(\w| )").unwrap();
         }
-        if let Some(caps) = RE.captures(s) {
+        let mut ss = String::from(s);
+        while ss.len() < 35 {
+            // for example input, pad lines so that the RE will still match
+            ss.push(' ');
+        }
+        if let Some(caps) = RE.captures(&ss) {
             let mut cols:[char; 9] = [' '; 9];
             for i in 0..9 {
                 let c = caps.get(i+1).unwrap();
@@ -55,10 +60,12 @@ impl FromStr for Movement {
 
 type Input = (Vec<StackRow>, Vec<Movement>);
 
-fn part(input: &Input, part: i32) {
+fn part(input: &Input, part: i32) -> String {
     let mut stacks: [Vec<char>; 9] = Default::default();
     let moves = &input.1;
-    for row in &input.0 {
+
+    // omit the last StackRow as it will be the number labels of the stacks
+    for row in &input.0[0 .. input.0.len() - 1] {
         for i in 0..9 {
             if row.cols[i] != ' ' {
                 stacks[i].push(row.cols[i]);
@@ -68,6 +75,7 @@ fn part(input: &Input, part: i32) {
     for i in 0..9 {
         stacks[i].reverse();
     }
+    // println!("{stacks:?}");
     for mv in moves {
         if part == 1 {
             for _ in 0..mv.n {
@@ -85,15 +93,24 @@ fn part(input: &Input, part: i32) {
             }
         }
     }
-    let mut out: String = String::new();
-    for i in 0..9 {
-        out.push(*stacks[i].last().unwrap())
-    }
-    println!("Part {}: {}", part, out);
+    (0..9).filter_map(|i| stacks[i].last()).collect::<String>()
 }
 
 fn main() {
     let input: Input = read_sectioned_input();
-    part(&input, 1);
-    part(&input, 2);
+    println!("Part 1: {}", part(&input, 1));
+    println!("Part 2: {}", part(&input, 2));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::sectioned_test_input;
+
+    #[test]
+    fn day05_test() {
+        let input: Input = sectioned_test_input(include_str!("day05.testinput"));
+        assert_eq!(part(&input, 1), "CMZ".to_string());
+        assert_eq!(part(&input, 2), "MCD".to_string());
+    }
 }

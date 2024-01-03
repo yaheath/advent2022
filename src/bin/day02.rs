@@ -1,21 +1,17 @@
-#[macro_use] extern crate lazy_static;
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::vec::Vec;
-use regex::Regex;
+use lazy_static::lazy_static;
 use advent_lib::read::read_input;
-use derivative::Derivative;
 
-#[derive(Debug, Eq, Derivative)]
-#[derivative(PartialEq, Hash)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 enum Move {
     Rock,
     Paper,
     Scissors,
 }
 
-#[derive(Debug, Eq, Derivative)]
-#[derivative(PartialEq, Hash)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 enum Outcome {
     Win,
     Lose,
@@ -29,31 +25,58 @@ struct RawTurn {
 }
 
 impl FromStr for RawTurn {
-    type Err = String;
+    type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        lazy_static! {
-            static ref RE: Regex = Regex::new(r"(\w) (\w)").unwrap();
-        }
-        if let Some(caps) = RE.captures(s) {
+        if let Some((opponent, me)) = s.split_once(' ') {
             Ok(
                 RawTurn {
-                    opponent: caps.get(1).unwrap().as_str().into(),
-                    me: caps.get(2).unwrap().as_str().into(),
+                    opponent: opponent.into(),
+                    me: me.into(),
                 }
             )
         }
         else {
-            Err("invalid input line".to_string())
+            Err(())
         }
     }
 }
 
 struct Rules {
-    opponent_map: HashMap<String, Move>,
-    my_map: HashMap<String, Move>,
-    outcome_map: HashMap<String, Outcome>,
+    opponent_map: HashMap<&'static str, Move>,
+    my_map: HashMap<&'static str, Move>,
+    outcome_map: HashMap<&'static str, Outcome>,
     move_scoring: HashMap<Move, i32>,
     outcome_scoring: HashMap<Outcome, i32>,
+}
+
+lazy_static! {
+    static ref RULES: Rules = Rules {
+        opponent_map: HashMap::from([
+            ("A", Move::Rock),
+            ("B", Move::Paper),
+            ("C", Move::Scissors),
+        ]),
+        my_map: HashMap::from([
+            ("X", Move::Rock),
+            ("Y", Move::Paper),
+            ("Z", Move::Scissors),
+        ]),
+        outcome_map: HashMap::from([
+            ("X", Outcome::Lose),
+            ("Y", Outcome::Draw),
+            ("Z", Outcome::Win),
+        ]),
+        move_scoring: HashMap::from([
+            (Move::Rock, 1),
+            (Move::Paper, 2),
+            (Move::Scissors, 3),
+        ]),
+        outcome_scoring: HashMap::from([
+            (Outcome::Win, 6),
+            (Outcome::Lose, 0),
+            (Outcome::Draw, 3),
+        ]),
+    };
 }
 
 fn get_outcome(me:&Move, opponent:&Move) -> Outcome {
@@ -82,65 +105,48 @@ fn get_move(me:&Outcome, opponent:&Move) -> Move {
     }
 }
 
-fn score1(turn: &RawTurn, rules: &Rules) -> i32 {
-    let opponent_move = rules.opponent_map.get(&turn.opponent).unwrap();
-    let my_move = rules.my_map.get(&turn.me).unwrap();
+fn score1(turn: &RawTurn) -> i32 {
+    let opponent_move = RULES.opponent_map.get(&*turn.opponent).unwrap();
+    let my_move = RULES.my_map.get(&*turn.me).unwrap();
 
     let outcome = get_outcome(&my_move, &opponent_move);
 
-    rules.move_scoring.get(&my_move).unwrap()
-      + rules.outcome_scoring.get(&outcome).unwrap()
+    RULES.move_scoring.get(&my_move).unwrap()
+      + RULES.outcome_scoring.get(&outcome).unwrap()
 }
 
-fn part1(input: &Vec<RawTurn>, rules: &Rules) {
-    let result = input.iter().map(|turn| score1(&turn, rules)).sum::<i32>();
-    println!("Part 1: {}", result);
+fn part1(input: &Vec<RawTurn>) -> i32 {
+    input.iter().map(|turn| score1(&turn)).sum::<i32>()
 }
 
-fn score2(turn: &RawTurn, rules: &Rules) -> i32 {
-    let opponent_move = rules.opponent_map.get(&turn.opponent).unwrap();
-    let my_move = get_move(rules.outcome_map.get(&turn.me).unwrap(), &opponent_move);
+fn score2(turn: &RawTurn) -> i32 {
+    let opponent_move = RULES.opponent_map.get(&*turn.opponent).unwrap();
+    let my_move = get_move(RULES.outcome_map.get(&*turn.me).unwrap(), &opponent_move);
 
     let outcome = get_outcome(&my_move, &opponent_move);
 
-    rules.move_scoring.get(&my_move).unwrap()
-      + rules.outcome_scoring.get(&outcome).unwrap()
+    RULES.move_scoring.get(&my_move).unwrap()
+      + RULES.outcome_scoring.get(&outcome).unwrap()
 }
-fn part2(input: &Vec<RawTurn>, rules: &Rules) {
-    let result = input.iter().map(|turn| score2(&turn, rules)).sum::<i32>();
-    println!("Part 2: {}", result);
+fn part2(input: &Vec<RawTurn>) -> i32 {
+    input.iter().map(|turn| score2(&turn)).sum::<i32>()
 }
 
 fn main() {
-    let rules = Rules {
-        opponent_map: HashMap::from([
-            ("A".into(), Move::Rock),
-            ("B".into(), Move::Paper),
-            ("C".into(), Move::Scissors),
-        ]),
-        my_map: HashMap::from([
-            ("X".into(), Move::Rock),
-            ("Y".into(), Move::Paper),
-            ("Z".into(), Move::Scissors),
-        ]),
-        outcome_map: HashMap::from([
-            ("X".into(), Outcome::Lose),
-            ("Y".into(), Outcome::Draw),
-            ("Z".into(), Outcome::Win),
-        ]),
-        move_scoring: HashMap::from([
-            (Move::Rock, 1),
-            (Move::Paper, 2),
-            (Move::Scissors, 3),
-        ]),
-        outcome_scoring: HashMap::from([
-            (Outcome::Win, 6),
-            (Outcome::Lose, 0),
-            (Outcome::Draw, 3),
-        ]),
-    };
-
     let input: Vec<RawTurn> = read_input::<RawTurn>();
-    part1(&input, &rules);
-    part2(&input, &rules);
+    println!("Part 1: {}", part1(&input));
+    println!("Part 2: {}", part2(&input));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::test_input;
+
+    #[test]
+    fn day02_test() {
+        let input: Vec<RawTurn> = test_input("A Y\nB X\nC Z\n");
+        assert_eq!(part1(&input), 15);
+        assert_eq!(part2(&input), 12);
+    }
 }

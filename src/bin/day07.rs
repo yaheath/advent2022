@@ -1,8 +1,8 @@
-#[macro_use] extern crate lazy_static;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::vec::Vec;
 use std::str::FromStr;
+use std::vec::Vec;
+use lazy_static::lazy_static;
 use regex::Regex;
 use advent_lib::read::read_input;
 
@@ -26,16 +26,16 @@ impl DirTree {
         DirTree { nodes: nodes }
     }
 
-    fn size(&self, path: String) -> usize {
-        let dir = self.nodes.get(&path).unwrap();
+    fn size(&self, path: &str) -> usize {
+        let dir = self.nodes.get(path).unwrap();
 
         dir.children.iter().map(
-              |c| self.size(Path::new(&path).join(&c).to_str().unwrap().into())
+              |c| self.size(Path::new(path).join(&c).to_str().unwrap().into())
             ).sum::<usize>()
          + dir.files.iter().map(|(_, size)| size).sum::<usize>()
     }
 
-    fn mkdir(&mut self, cwd: &String, name: &String) {
+    fn mkdir(&mut self, cwd: &str, name: &str) {
         let path:String = Path::new(cwd).join(name).to_str().unwrap().into();
         if self.nodes.contains_key(&path) {
             return;
@@ -46,16 +46,16 @@ impl DirTree {
         };
         self.nodes.insert(path, dir);
         let parent = self.nodes.get_mut(cwd).unwrap();
-        parent.children.insert(name.clone());
+        parent.children.insert(name.into());
     }
 
-    fn mkfile(&mut self, cwd: &String, name: &String, size: usize) {
+    fn mkfile(&mut self, cwd: &str, name: &str, size: usize) {
         let dir = self.nodes.get_mut(cwd).unwrap();
-        dir.files.insert(name.clone(), size);
+        dir.files.insert(name.into(), size);
     }
 
-    fn get(&self, path: String) -> &DirNode {
-        self.nodes.get(&path).unwrap()
+    fn get(&self, path: &str) -> &DirNode {
+        self.nodes.get(path).unwrap()
     }
 }
 
@@ -127,10 +127,10 @@ fn build_tree(input: &Vec<Input>) -> DirTree {
                 }
             },
             Input::File(ifile) => {
-                tree.mkfile(&cwd.to_str().unwrap().into(), &ifile.name, ifile.size);
+                tree.mkfile(&cwd.to_str().unwrap(), &ifile.name, ifile.size);
             },
             Input::Dir(idir) => {
-                tree.mkdir(&cwd.to_str().unwrap().into(), &idir.name);
+                tree.mkdir(&cwd.to_str().unwrap(), &idir.name);
             },
             Input::Empty => {},
         }
@@ -138,39 +138,50 @@ fn build_tree(input: &Vec<Input>) -> DirTree {
     tree
 }
 
-fn search(tree: &DirTree, dir: String, thresh: usize, bigger: bool, results: &mut Vec<usize>) {
-    let size = tree.size(dir.clone());
+fn search(tree: &DirTree, dir: &str, thresh: usize, bigger: bool, results: &mut Vec<usize>) {
+    let size = tree.size(dir);
     if !bigger && size <= thresh || bigger && size >= thresh {
         results.push(size);
     }
-    let dirnode = tree.get(dir.clone());
+    let dirnode = tree.get(dir);
     for c in dirnode.children.iter() {
         let path:String = Path::new(&dir).join(&c).to_str().unwrap().into();
-        search(tree, path, thresh, bigger, results);
+        search(tree, &path, thresh, bigger, results);
     }
 }
 
-fn part1(input: &Vec<Input>) {
+fn part1(input: &Vec<Input>) -> usize {
     let tree = build_tree(input);
     let mut results: Vec<usize> = Vec::new();
-    search(&tree, "/".into(), 100000, false, &mut results);
-    let value:usize = results.iter().sum();
-    println!("Part 1: {}", value);
+    search(&tree, "/", 100000, false, &mut results);
+    results.iter().sum()
 }
 
-fn part2(input: &Vec<Input>) {
+fn part2(input: &Vec<Input>) -> usize {
     let tree = build_tree(input);
-    let total = tree.size("/".into());
+    let total = tree.size("/");
     let needed = 30000000 - (70000000 - total);
 
     let mut results: Vec<usize> = Vec::new();
-    search(&tree, "/".into(), needed, true, &mut results);
-    results.sort();
-    println!("Part 2: {}", results[0]);
+    search(&tree, "/", needed, true, &mut results);
+    results.into_iter().min().unwrap()
 }
 
 fn main() {
-    let input: Vec<Input> = read_input::<Input>();
-    part1(&input);
-    part2(&input);
+    let input: Vec<Input> = read_input();
+    println!("Part 1: {}", part1(&input));
+    println!("Part 2: {}", part2(&input));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::test_input;
+
+    #[test]
+    fn day07_test() {
+        let input: Vec<Input> = test_input(include_str!("day07.testinput"));
+        assert_eq!(part1(&input), 95437);
+        assert_eq!(part2(&input), 24933642);
+    }
 }
