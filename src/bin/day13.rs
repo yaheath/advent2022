@@ -5,18 +5,13 @@ use json;
 use json::JsonValue;
 use advent_lib::read::read_grouped_input;
 
-struct JsonValueWrapper {
-    value: JsonValue
-}
+struct JsonValueWrapper(JsonValue);
 
 impl FromStr for JsonValueWrapper {
     type Err = json::JsonError;
     fn from_str(s: &str) -> Result<Self, json::JsonError> {
-        let result = json::parse(s);
-        match result {
-            Ok(value) => Ok(JsonValueWrapper { value: value }),
-            Err(e) => Err(e),
-        }
+        let value = json::parse(s)?;
+        Ok(JsonValueWrapper(value))
     }
 }
 
@@ -47,22 +42,21 @@ fn check_order(left: &JsonValue, right: &JsonValue) -> Ordering {
     }
 }
 
-fn part1(input: &Vec<Vec<JsonValueWrapper>>) {
+fn part1(input: &Vec<Vec<JsonValueWrapper>>) -> usize {
     let mut correct_pairs: Vec<usize> = Vec::new();
     for (idx, row) in input.iter().enumerate() {
-        let result = check_order(&row[0].value, &row[1].value);
+        let result = check_order(&row[0].0, &row[1].0);
         match result {
             Ordering::Less => { correct_pairs.push(idx + 1); },
             Ordering::Greater => {},
             Ordering::Equal => { panic!(); },
         }
     }
-    let result:usize = correct_pairs.iter().sum();
-    println!("Part 1: {}", result);
+    correct_pairs.iter().sum()
 }
 
-fn part2(input: &Vec<Vec<JsonValueWrapper>>) {
-    let mut items:Vec<&JsonValue> = input.iter().flatten().map(|x| &x.value).collect();
+fn part2(input: &Vec<Vec<JsonValueWrapper>>) -> usize {
+    let mut items:Vec<&JsonValue> = input.iter().flatten().map(|x| &x.0).collect();
     let div1 = json::parse("[[2]]").unwrap();
     let div2 = json::parse("[[6]]").unwrap();
     items.push(&div1);
@@ -70,11 +64,24 @@ fn part2(input: &Vec<Vec<JsonValueWrapper>>) {
     items.sort_by(|a,b| check_order(a,b));
     let idx1 = items.iter().position(|x| *x == &div1).unwrap() + 1;
     let idx2 = items.iter().position(|x| *x == &div2).unwrap() + 1;
-    println!("Part 2: {}", idx1 * idx2);
+    idx1 * idx2
 }
 
 fn main() {
     let input: Vec<Vec<JsonValueWrapper>> = read_grouped_input();
-    part1(&input);
-    part2(&input);
+    println!("Part 1: {}", part1(&input));
+    println!("Part 2: {}", part2(&input));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::grouped_test_input;
+
+    #[test]
+    fn day13_test() {
+        let input: Vec<Vec<JsonValueWrapper>> = grouped_test_input(include_str!("day13.testinput"));
+        assert_eq!(part1(&input), 13);
+        assert_eq!(part2(&input), 140);
+    }
 }

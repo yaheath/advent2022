@@ -80,20 +80,20 @@ fn searchrow(input: &Vec<Sensor>, tgtrow: i64) -> (Vec<Range<i64>>, Vec<i64>) {
     (merged_ranges, sorted_beacons)
 }
 
-fn part1(input: &Vec<Sensor>) {
-    let (ranges, beacons) = searchrow(input, 2000000i64);
+fn part1(input: &Vec<Sensor>, at_y: i64) -> i64 {
+    let (ranges, beacons) = searchrow(input, at_y);
     let mut sum = 0i64;
     for range in ranges {
         let nbeacons = bsearch(&beacons, &range) as i64;
         sum += range.end - range.start - nbeacons;
     }
-    println!("Part 1: {}", sum);
+    sum
 }
 
-fn part2(input: &Vec<Sensor>) {
+fn part2(input: &Vec<Sensor>, max: i64) -> i64 {
     let mut x:i64 = 0;
     let mut y:i64 = 0;
-    for row in 0..=4000000 {
+    for row in 0..=max {
         let (ranges, _) = searchrow(input, row);
         if ranges.len() > 1 {
             //println!("{}, {}", ranges[0].end, row);
@@ -102,12 +102,25 @@ fn part2(input: &Vec<Sensor>) {
             break;
         }
     }
-    println!("Part 2: {}", x * 4000000 + y);
+    x * 4000000 + y
 }
 
 fn main() {
     let input = read_input::<Sensor>();
 
-    part1(&input);
-    part2(&input);
+    println!("Part 1: {}", part1(&input, 2000000));
+    println!("Part 2: {}", part2(&input, 4000000));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::test_input;
+
+    #[test]
+    fn day15_test() {
+        let input: Vec<Sensor> = test_input(include_str!("day15.testinput"));
+        assert_eq!(part1(&input, 10), 26);
+        assert_eq!(part2(&input, 20), 56000011);
+    }
 }

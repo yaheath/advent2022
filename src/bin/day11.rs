@@ -147,24 +147,15 @@ fn monkey_step(id: usize, modulo: i64, monkeys: &mut Vec<Monkey>) -> bool {
     monkeys[id].items.len() > 0
 }
 
-fn part1(input: &Vec<Input>) {
+fn bothparts(input: &Vec<Input>, part2: bool) -> i64 {
     let mut monkeys = make_monkeys(input);
-    for _ in 0..20 {
-        for id in 0..monkeys.len() {
-            while monkey_step(id, 0, &mut monkeys) {
-            }
-        }
+    let (steps, modulo) = if part2 {
+        (10000, monkeys.iter().map(|m| m.divisible).product())
     }
-    let mut insp:Vec<i64> = monkeys.iter().map(|m| m.inspections).collect();
-    insp.sort_unstable_by(|a,b| b.cmp(a));
-    let val = insp[0] * insp[1];
-    println!("Part 1: {}", val);
-}
-
-fn part2(input: &Vec<Input>) {
-    let mut monkeys = make_monkeys(input);
-    let modulo:i64 = monkeys.iter().map(|m| m.divisible).product();
-    for _ in 0..10000 {
+    else {
+        (20, 0)
+    };
+    for _ in 0..steps {
         for id in 0..monkeys.len() {
             while monkey_step(id, modulo, &mut monkeys) {
             }
@@ -172,12 +163,24 @@ fn part2(input: &Vec<Input>) {
     }
     let mut insp:Vec<i64> = monkeys.iter().map(|m| m.inspections).collect();
     insp.sort_unstable_by(|a,b| b.cmp(a));
-    let val = insp[0] * insp[1];
-    println!("Part 2: {}", val);
+    insp[0] * insp[1]
 }
 
 fn main() {
-    let input: Vec<Input> = read_input::<Input>();
-    part1(&input);
-    part2(&input);
+    let input: Vec<Input> = read_input();
+    println!("Part 1: {}", bothparts(&input, false));
+    println!("Part 2: {}", bothparts(&input, true));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::test_input;
+
+    #[test]
+    fn day11_test() {
+        let input: Vec<Input> = test_input(include_str!("day11.testinput"));
+        assert_eq!(bothparts(&input, false), 10605);
+        assert_eq!(bothparts(&input, true), 2713310158);
+    }
 }

@@ -128,26 +128,23 @@ fn search(valves: &HashMap<ValveId,Valve>, dxmap: &HashMap<(ValveId,ValveId), Mi
     max_released
 }
 
-fn part1(input: &HashMap<ValveId,Valve>, dxmap: &HashMap<(ValveId,ValveId), Minute>) {
+fn part1(input: &HashMap<ValveId,Valve>, dxmap: &HashMap<(ValveId,ValveId), Minute>) -> Flow {
     let states = search(input, dxmap, 30);
-    let value = states.iter().map(|(_,v)| v).max().unwrap();
-    println!("Part 1: {}", value);
+    states.iter().map(|(_,v)| *v).max().unwrap()
 }
 
-fn part2(input: &HashMap<ValveId,Valve>, dxmap: &HashMap<(ValveId,ValveId), Minute>) {
+fn part2(input: &HashMap<ValveId,Valve>, dxmap: &HashMap<(ValveId,ValveId), Minute>) -> Flow {
     let states = search(input, dxmap, 26);
-    let value = states
+    states
         .iter()
         .tuple_combinations()
         .filter(|(human, elephant)| human.0.is_disjoint(elephant.0))
         .map(|(human, elephant)| human.1 + elephant.1)
         .max()
-        .unwrap();
-    println!("Part 2: {}", value);
+        .unwrap()
 }
 
-fn main() {
-    let input: Vec<Valve> = read_input::<Valve>();
+fn setup(input: Vec<Valve>) -> (HashMap<ValveId, Valve>, HashMap<(ValveId,ValveId), Minute>) {
     let valves: HashMap<ValveId, Valve> = input.iter().map(|r| (r.name.clone(), r.clone())).collect();
     let dxmap: HashMap<(ValveId,ValveId), Minute> =
         valves
@@ -157,6 +154,26 @@ fn main() {
         .tuple_combinations()
         .map(|(a, b)| ((*a,*b), dx_between(a, b, &valves)))
         .collect();
-    part1(&valves, &dxmap);
-    part2(&valves, &dxmap);
+    (valves, dxmap)
+}
+
+fn main() {
+    let input: Vec<Valve> = read_input::<Valve>();
+    let (valves, dxmap) = setup(input);
+    println!("Part 1: {}", part1(&valves, &dxmap));
+    println!("Part 2: {}", part2(&valves, &dxmap));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::test_input;
+
+    #[test]
+    fn day16_test() {
+        let input: Vec<Valve> = test_input(include_str!("day16.testinput"));
+        let (valves, dxmap) = setup(input);
+        assert_eq!(part1(&valves, &dxmap), 1651);
+        assert_eq!(part2(&valves, &dxmap), 1707);
+    }
 }

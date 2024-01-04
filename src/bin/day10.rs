@@ -41,9 +41,10 @@ fn check_signal(x: i32, cycle: i32) -> i32 {
 fn run<F>(input: &Vec<Instr>, mut callback: F)
         where F: FnMut(i32, i32) {
     let mut x: i32 = 1;
-    let mut cycle: i32 = 1;
-    callback(x, cycle);
+    let mut cycle: i32 = 0;
     for inst in input {
+        cycle += 1;
+        callback(x, cycle);
         match inst {
             Instr::Addx(n) => {
                 cycle += 1;
@@ -52,15 +53,13 @@ fn run<F>(input: &Vec<Instr>, mut callback: F)
             },
             Instr::Noop => {},
         }
-        cycle += 1;
-        callback(x, cycle);
     }
 }
 
-fn part1(input: &Vec<Instr>) {
+fn part1(input: &Vec<Instr>) -> i32 {
     let mut signal = 0i32;
     run(&input, |x, c| { signal += check_signal(x, c); });
-    println!("Part 1: {}", signal);
+    signal
 }
 
 fn check_pixel(x:i32, c:i32) -> bool {
@@ -68,18 +67,39 @@ fn check_pixel(x:i32, c:i32) -> bool {
     (x - xm).abs() <= 1
 }
 
-fn part2(input: &Vec<Instr>) {
-    println!("Part 2:");
+fn part2(input: &Vec<Instr>) -> String {
+    let mut out = String::new();
     run(&input, |x, cycle| {
-        print!("{}", if check_pixel(x, cycle) { '#' } else { '.' });
+        out.push(if check_pixel(x, cycle) { '#' } else { '.' });
         if cycle % 40 == 0 {
-            print!("\n");
+            out.push('\n');
         }
     });
+    out
 }
 
 fn main() {
-    let input: Vec<Instr> = read_input::<Instr>();
-    part1(&input);
-    part2(&input);
+    let input: Vec<Instr> = read_input();
+    println!("Part 1: {}", part1(&input));
+    println!("Part 2:\n{}", part2(&input));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::test_input;
+
+    #[test]
+    fn day10_test() {
+        let input: Vec<Instr> = test_input(include_str!("day10.testinput"));
+        assert_eq!(part1(&input), 13140);
+        assert_eq!(part2(&input),
+"##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######.....
+".to_string());
+    }
 }

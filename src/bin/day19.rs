@@ -1,7 +1,7 @@
-#[macro_use] extern crate lazy_static;
 use std::ops::{Add, Mul};
 use std::str::FromStr;
 use std::vec::Vec;
+use lazy_static::lazy_static;
 use regex::Regex;
 use advent_lib::read::read_input;
 
@@ -138,7 +138,7 @@ impl State {
     }
 
     fn branch(&self, blueprint: &Blueprint) -> impl Iterator<Item = Self> {
-        let max_ore_cost = blueprint .clay_bot .ore
+        let max_ore_cost = blueprint.clay_bot.ore
             .max(blueprint.obsidian_bot.ore)
             .max(blueprint.geode_bot.ore);
         let ore_robot_viable = self.production.ore < max_ore_cost;
@@ -204,22 +204,33 @@ fn search(bp: &Blueprint, timelimit: usize) -> usize {
     best
 }
 
-fn part1(input: &Vec<Blueprint>) {
-    let value:usize = input.iter().enumerate()
+fn part1(input: &Vec<Blueprint>) -> usize {
+    input.iter().enumerate()
         .map(|(idx, bp)| (idx + 1) * search(bp, 24))
-        .sum();
-    println!("Part 1: {}", value);
+        .sum()
 }
 
-fn part2(input: &Vec<Blueprint>) {
-    let value:usize = input.iter().take(3)
+fn part2(input: &Vec<Blueprint>) -> usize {
+    input.iter().take(3)
         .map(|bp| search(bp, 32))
-        .product();
-    println!("Part 2: {}", value);
+        .product()
 }
 
 fn main() {
-    let input: Vec<Blueprint> = read_input::<Blueprint>();
-    part1(&input);
-    part2(&input);
+    let input: Vec<Blueprint> = read_input();
+    println!("Part 1: {}", part1(&input));
+    println!("Part 2: {}", part2(&input));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::test_input;
+
+    #[test]
+    fn day19_test() {
+        let input: Vec<Blueprint> = test_input(include_str!("day19.testinput"));
+        assert_eq!(part1(&input), 33);
+        assert_eq!(part2(&input), 56 * 62);
+    }
 }

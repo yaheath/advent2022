@@ -20,20 +20,11 @@ impl FromStr for CoordList {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 enum Cell {
     Empty,
     Rock,
     Sand,
-}
-
-impl Cell {
-    fn is_empty(&self) -> bool {
-        match self {
-            Cell::Empty => true,
-            _ => false,
-        }
-    }
 }
 
 fn make_grid(input: &Vec<CoordList>) -> InfiniteGrid<Cell> {
@@ -72,21 +63,21 @@ fn placesand(grid: &mut InfiniteGrid<Cell>, start_x: i64, start_y: i64, floor: i
     let mut x = start_x;
     let mut y = start_y;
 
-    if !grid.get(x, y).is_empty() {
+    if grid.get(x, y) != Cell::Empty {
         return false
     }
 
     while floor > 0 && y < floor || floor == 0 && y < grid.y_bounds().end - 1 {
-        if grid.get(x, y + 1).is_empty() {
+        if grid.get(x, y + 1) == Cell::Empty {
             y += 1;
             continue;
         }
-        if grid.get(x - 1, y + 1).is_empty() {
+        if grid.get(x - 1, y + 1) == Cell::Empty {
             x -= 1;
             y += 1;
             continue;
         }
-        if grid.get(x + 1, y + 1).is_empty() {
+        if grid.get(x + 1, y + 1) == Cell::Empty {
             x += 1;
             y += 1;
             continue;
@@ -101,17 +92,17 @@ fn placesand(grid: &mut InfiniteGrid<Cell>, start_x: i64, start_y: i64, floor: i
     false
 }
 
-fn part1(input: &Vec<CoordList>) {
+fn part1(input: &Vec<CoordList>) -> usize {
     let mut grid = make_grid(&input);
     let mut count: usize = 0;
     while placesand(&mut grid, 500, 0, 0) {
         count += 1;
     }
     //printgrid(&grid);
-    println!("Part 1: {}", count);
+    count
 }
 
-fn part2(input: &Vec<CoordList>) {
+fn part2(input: &Vec<CoordList>) -> usize {
     let mut grid = make_grid(&input);
     let mut count: usize = 0;
     let floor = grid.y_bounds().end;
@@ -119,11 +110,24 @@ fn part2(input: &Vec<CoordList>) {
         count += 1;
     }
     //printgrid(&grid);
-    println!("Part 2: {}", count);
+    count
 }
 
 fn main() {
     let input: Vec<CoordList> = read_input::<CoordList>();
-    part1(&input);
-    part2(&input);
+    println!("Part 1: {}", part1(&input));
+    println!("Part 2: {}", part2(&input));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::test_input;
+
+    #[test]
+    fn day14_test() {
+        let input: Vec<CoordList> = test_input(include_str!("day14.testinput"));
+        assert_eq!(part1(&input), 64);
+        assert_eq!(part2(&input), 58);
+    }
 }

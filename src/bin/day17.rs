@@ -1,10 +1,27 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::vec::Vec;
 use advent_lib::read::read_input;
 
 enum Push {
     Left,
     Right,
+}
+
+struct PushList(Vec<Push>);
+
+impl FromStr for PushList {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let pat:Vec<Push> = s.chars().filter(|c| *c == '<' || *c == '>').map(|c|
+            match c {
+                '<' => Push::Left,
+                '>' => Push::Right,
+                _ => panic!(),
+            }
+        ).collect();
+        Ok(PushList(pat))
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -113,25 +130,29 @@ fn simulate(pushpattern: &Vec<Push>, n_rocks: usize) -> usize {
     return shaft.len() + repeated_rows;
 }
 
-fn part1(pushpattern: &Vec<Push>) {
-    let value = simulate(pushpattern, 2022);
-    println!("Part 1: {}", value);
+fn part1(pushpattern: &Vec<Push>) -> usize {
+    simulate(pushpattern, 2022)
 }
 
-fn part2(pushpattern: &Vec<Push>) {
-    let value = simulate(pushpattern, 1000000000000);
-    println!("Part 2: {}", value);
+fn part2(pushpattern: &Vec<Push>) -> usize {
+    simulate(pushpattern, 1000000000000)
 }
 
 fn main() {
-    let input: Vec<String> = read_input::<String>();
-    let pushpattern:Vec<Push> = input[0].chars().filter(|c| *c == '<' || *c == '>').map(|c|
-        match c {
-            '<' => Push::Left,
-            '>' => Push::Right,
-            _ => panic!(),
-        }
-    ).collect();
-    part1(&pushpattern);
-    part2(&pushpattern);
+    let input: Vec<PushList> = read_input();
+    println!("Part 1: {}", part1(&input[0].0));
+    println!("Part 2: {}", part2(&input[0].0));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::test_input;
+
+    #[test]
+    fn day17_test() {
+        let input: Vec<PushList> = test_input(include_str!("day17.testinput"));
+        assert_eq!(part1(&input[0].0), 3068);
+        assert_eq!(part2(&input[0].0), 1514285714288);
+    }
 }

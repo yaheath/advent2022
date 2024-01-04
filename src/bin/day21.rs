@@ -1,11 +1,10 @@
-#[macro_use] extern crate lazy_static;
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::vec::Vec;
+use lazy_static::lazy_static;
 use regex::Regex;
 use advent_lib::read::read_input;
 
-#[derive(Clone)]
 enum Op {
     Const(i64),
     Add(String,String),
@@ -54,22 +53,21 @@ impl FromStr for Monkey {
     }
 }
 
-fn resolve(monkey: String, monkeys: &HashMap<&str,&Monkey>) -> i64 {
-    let val = match monkeys[monkey.as_str()].op.clone() {
-        Op::Const(n) => n,
-        Op::Add(a, b) => resolve(a, monkeys) + resolve(b, monkeys),
-        Op::Sub(a, b) => resolve(a, monkeys) - resolve(b, monkeys),
-        Op::Mul(a, b) => resolve(a, monkeys) * resolve(b, monkeys),
-        Op::Div(a, b) => resolve(a, monkeys) / resolve(b, monkeys),
+fn resolve(monkey: &str, monkeys: &HashMap<&str,&Monkey>) -> i64 {
+    let val = match &monkeys[monkey].op {
+        Op::Const(n) => *n,
+        Op::Add(a, b) => resolve(&a, monkeys) + resolve(&b, monkeys),
+        Op::Sub(a, b) => resolve(&a, monkeys) - resolve(&b, monkeys),
+        Op::Mul(a, b) => resolve(&a, monkeys) * resolve(&b, monkeys),
+        Op::Div(a, b) => resolve(&a, monkeys) / resolve(&b, monkeys),
     };
     val
 }
 
-fn part1(input: &Vec<Monkey>) {
+fn part1(input: &Vec<Monkey>) -> i64 {
     let monkeys: HashMap<&str,&Monkey> = HashMap::from_iter(
         input.iter().map(|m| (m.name.as_str(), m)));
-    let value = resolve("root".into(), &monkeys);
-    println!("Part 1: {}", value);
+    resolve("root", &monkeys)
 }
 
 enum HOp {
@@ -87,7 +85,7 @@ enum Res {
     Op(usize),
 }
 
-fn resolve_h(monkey: String, monkeys: &HashMap<&str,&Monkey>, ops: &mut Vec<HOp>) -> Res {
+fn resolve_h(monkey: &str, monkeys: &HashMap<&str,&Monkey>, ops: &mut Vec<HOp>) -> Res {
     if monkey == "humn" {
         let idx = ops.len();
         ops.push(HOp::Human);
@@ -95,21 +93,21 @@ fn resolve_h(monkey: String, monkeys: &HashMap<&str,&Monkey>, ops: &mut Vec<HOp>
     }
     let res_a: Res;
     let res_b: Res;
-    let op = monkeys[monkey.as_str()].op.clone();
-    match &op {
+    let op = &monkeys[monkey].op;
+    match op {
         Op::Const(n) => { return Res::Const(*n); },
         Op::Add(a, b) |
         Op::Sub(a, b) |
         Op::Mul(a, b) |
         Op::Div(a, b) => {
-            res_a = resolve_h(a.clone(), monkeys, ops);
-            res_b = resolve_h(b.clone(), monkeys, ops);
+            res_a = resolve_h(&a, monkeys, ops);
+            res_b = resolve_h(&b, monkeys, ops);
         },
     };
     match (res_a, res_b) {
         (Res::Const(a), Res::Const(b)) => {
             return Res::Const(
-                match &op {
+                match op {
                     Op::Add(_,_) => a + b,
                     Op::Sub(_,_) => a - b,
                     Op::Mul(_,_) => a * b,
@@ -119,7 +117,7 @@ fn resolve_h(monkey: String, monkeys: &HashMap<&str,&Monkey>, ops: &mut Vec<HOp>
             );
         },
         (Res::Const(a_val), Res::Op(b_idx)) => {
-            let hop = match &op {
+            let hop = match op {
                 Op::Add(_,_) => HOp::Add(a_val, b_idx),
                 Op::Sub(_,_) => HOp::Sub(a_val, b_idx),
                 Op::Mul(_,_) => HOp::Mul(a_val, b_idx),
@@ -131,7 +129,7 @@ fn resolve_h(monkey: String, monkeys: &HashMap<&str,&Monkey>, ops: &mut Vec<HOp>
             return Res::Op(idx);
         },
         (Res::Op(a_idx), Res::Const(b_val)) => {
-            let hop = match &op {
+            let hop = match op {
                 Op::Add(_,_) => HOp::Add(b_val, a_idx),
                 Op::Sub(_,_) => HOp::SubR(a_idx, b_val),
                 Op::Mul(_,_) => HOp::Mul(b_val, a_idx),
@@ -146,7 +144,7 @@ fn resolve_h(monkey: String, monkeys: &HashMap<&str,&Monkey>, ops: &mut Vec<HOp>
     }
 }
 
-/*
+#[allow(dead_code)]
 fn show(idx: usize, ops: &Vec<HOp>) -> String {
     match ops[idx] {
         HOp::Human => "X".into(),
@@ -158,7 +156,6 @@ fn show(idx: usize, ops: &Vec<HOp>) -> String {
         HOp::DivR(i, val) => format!("({} / {})", show(i, ops), val),
     }
 }
-*/
 
 fn solve(initialvalue: i64, initialidx: usize, ops: &Vec<HOp>) -> i64 {
     let mut value = initialvalue;
@@ -176,11 +173,11 @@ fn solve(initialvalue: i64, initialidx: usize, ops: &Vec<HOp>) -> i64 {
     };
 }
 
-fn part2(input: &Vec<Monkey>) {
+fn part2(input: &Vec<Monkey>) -> i64 {
     let monkeys: HashMap<&str,&Monkey> = HashMap::from_iter(
         input.iter().map(|m| (m.name.as_str(), m)));
     let root = monkeys["root"];
-    let (a, b) = match root.op.clone() {
+    let (a, b) = match &root.op {
         Op::Add(a, b) |
         Op::Sub(a, b) |
         Op::Mul(a, b) |
@@ -188,19 +185,32 @@ fn part2(input: &Vec<Monkey>) {
         _ => panic!(),
     };
     let mut ops: Vec<HOp> = Vec::new();
-    let av = resolve_h(a, &monkeys, &mut ops);
-    let bv = resolve_h(b, &monkeys, &mut ops);
+    let av = resolve_h(&a, &monkeys, &mut ops);
+    let bv = resolve_h(&b, &monkeys, &mut ops);
     let (val, opidx) = match (av, bv) {
         (Res::Const(v), Res::Op(idx)) |
         (Res::Op(idx), Res::Const(v)) => (v, idx),
         _ => panic!(),
     };
-    let x = solve(val, opidx, &ops);
-    println!("Part 2: {}", x);
+    // println!("{} = {val}", show(opidx, &ops));
+    solve(val, opidx, &ops)
 }
 
 fn main() {
     let input: Vec<Monkey> = read_input::<Monkey>();
-    part1(&input);
-    part2(&input);
+    println!("Part 1: {}", part1(&input));
+    println!("Part 2: {}", part2(&input));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::test_input;
+
+    #[test]
+    fn day21_test() {
+        let input: Vec<Monkey> = test_input(include_str!("day21.testinput"));
+        assert_eq!(part1(&input), 152);
+        assert_eq!(part2(&input), 301);
+    }
 }

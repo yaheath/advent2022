@@ -141,18 +141,31 @@ fn run(input: &Vec<String>, max_iters: i64) -> (i64, usize) {
     (empties, n_iters)
 }
 
-fn part1(input: &Vec<String>) {
+fn part1(input: &Vec<String>) -> i64 {
     let (value, _) = run(input, 10);
-    println!("Part 1: {}", value);
+    value
 }
 
-fn part2(input: &Vec<String>) {
+fn part2(input: &Vec<String>) -> usize {
     let (_, value) = run(input, i64::MAX);
-    println!("Part 2: {}", value);
+    value
 }
 
 fn main() {
     let input: Vec<String> = read_input();
-    part1(&input);
-    part2(&input);
+    println!("Part 1: {}", part1(&input));
+    println!("Part 2: {}", part2(&input));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::test_input;
+
+    #[test]
+    fn day23_test() {
+        let input: Vec<Pair> = test_input(include_str!("day23.testinput"));
+        assert_eq!(part1(&input), 110);
+        assert_eq!(part2(&input), 20);
+    }
 }

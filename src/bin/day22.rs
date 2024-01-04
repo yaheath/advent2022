@@ -235,7 +235,7 @@ fn fold(grid: &mut Grid<Cell>) {
     );
 }
 
-fn part(grid: &mut Grid<Cell>, moves: &Vec<Move>, partnum:i64) {
+fn part(grid: &mut Grid<Cell>, moves: &Vec<Move>, partnum:i64) -> i64 {
     let mut pos = Pos {x: 0, y: 0, dir: Dir::Right};
     for x in grid.x_bounds() {
         match grid.get(x, 0) {
@@ -249,12 +249,11 @@ fn part(grid: &mut Grid<Cell>, moves: &Vec<Move>, partnum:i64) {
     for m in moves {
         pos.apply_move(m, grid);
     }
-    println!("Part {}: {}", partnum, pos.password());
+    pos.password()
 }
 
-fn main() {
-    let input: Vec<Vec<String>> = read_grouped_input::<String>();
-    let mut grid: Grid<Cell> = Grid::from_input(&input[0], Cell::Void, 1, |c| match c {
+fn setup(input: Vec<Vec<String>>) -> (Grid<Cell>, Vec<Move>) {
+    let grid: Grid<Cell> = Grid::from_input(&input[0], Cell::Void, 1, |c| match c {
         ' ' => Cell::Void,
         '#' => Cell::Wall,
         '.' => Cell::Open,
@@ -269,6 +268,27 @@ fn main() {
             d => Move::Forward(d.parse::<usize>().unwrap()),
         })
         .collect();
-    part(&mut grid, &moves, 1);
-    part(&mut grid, &moves, 2);
+    (grid, moves)
+}
+
+fn main() {
+    let input: Vec<Vec<String>> = read_grouped_input::<String>();
+    let (mut grid, moves) = setup(input);
+    println!("Part 1: {}", part(&mut grid, &moves, 1));
+    println!("Part 2: {}", part(&mut grid, &moves, 2));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::grouped_test_input;
+
+    #[test]
+    fn day22_test() {
+        let input: Vec<Vec<String>> = grouped_test_input(include_str!("day22.testinput"));
+        let (mut grid, moves) = setup(input);
+        assert_eq!(part(&mut grid, &moves, 1), 6032);
+        // Cube fold currently only works on my real input
+        // assert_eq!(part(&mut grid, &moves, 2), 5031);
+    }
 }

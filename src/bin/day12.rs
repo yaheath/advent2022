@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
 use advent_lib::read::read_input;
@@ -95,42 +94,53 @@ fn search(grid: &Grid<Cell>, startx: i64, starty: i64) -> i64 {
         check(state.x - 1, state.y);
         check(state.x, state.y - 1);
     }
-    -1
+    i64::MAX
 }
 
-fn part1(grid: &Grid<Cell>) {
-    if let Some((startx, starty)) = grid.find(|c,_,_| c == Cell::Start) {
-        let d = search(grid, startx, starty);
-        println!("Part 1: {}", d);
-    }
+fn part1(grid: &Grid<Cell>) -> i64 {
+    let (startx, starty) = grid.find(|c,_,_| c == Cell::Start).unwrap();
+    search(grid, startx, starty)
 }
 
-fn part2(grid: &Grid<Cell>) {
-    let min: RefCell<i64> = RefCell::new(-1);
-
-    grid.for_each(|cell, x, y| {
-        match cell {
-            Cell::Start | Cell::Elev(0) => {},
-            _ => { return; }
-        }
-        let val = search(grid, x, y);
-        if val < 0 { return; }
-        let minval = *min.borrow();
-        if minval == -1 || val < minval {
-            *min.borrow_mut() = val;
-        }
-    });
-    println!("Part 2: {}", min.borrow());
+fn part2(grid: &Grid<Cell>) -> i64 {
+    grid.iter_with_coord()
+        .map(|(cell, x, y)| {
+            match cell {
+                Cell::Start | Cell::Elev(0) => {},
+                _ => { return i64::MAX; }
+            }
+            search(grid, x, y)
+        })
+        .min()
+        .unwrap()
 }
 
-fn main() {
-    let data = read_input::<String>();
-    let grid = Grid::from_input(&data, Cell::Uninitialized, 0, |c| match c {
+fn mkgrid(input: Vec<String>) -> Grid<Cell> {
+    Grid::from_input(&input, Cell::Uninitialized, 0, |c| match c {
         'S' => Cell::Start,
         'E' => Cell::End,
         'a'..='z' => Cell::Elev((c as u8) - b'a'),
         _ => Cell::Uninitialized,
-    });
-    part1(&grid);
-    part2(&grid);
+    })
+}
+
+fn main() {
+    let input = read_input::<String>();
+    let grid = mkgrid(input);
+    println!("Part 1: {}", part1(&grid));
+    println!("Part 2: {}", part2(&grid));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use advent_lib::read::test_input;
+
+    #[test]
+    fn day12_test() {
+        let input: Vec<String> = test_input(include_str!("day12.testinput"));
+        let grid = mkgrid(input);
+        assert_eq!(part1(&grid), 31);
+        assert_eq!(part2(&grid), 29);
+    }
 }
