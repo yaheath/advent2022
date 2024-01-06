@@ -4,6 +4,7 @@ use std::ops::Range;
 use std::vec::Vec;
 use ya_advent_lib::infinite_grid::InfiniteGrid;
 use ya_advent_lib::read::read_input;
+use ya_advent_lib::coords::{CDir, Coord2D};
 
 #[derive(Copy, Clone)]
 enum Cell {
@@ -13,63 +14,55 @@ enum Cell {
 
 #[derive(Copy, Clone)]
 struct Elf {
-    x: i64,
-    y: i64,
-    proposed: Option<(i64, i64)>,
+    loc: Coord2D,
+    proposed: Option<Coord2D>,
 }
 
-enum Dir {
-    North,
-    East,
-    South,
-    West,
-}
-
-fn step(grid: &mut InfiniteGrid<Cell>, elves: &mut [Elf], searchorder: &mut Vec<Dir>) -> bool {
-    let mut proposed: HashMap<(i64,i64),usize> = HashMap::new();
+fn step(grid: &mut InfiniteGrid<Cell>, elves: &mut [Elf], searchorder: &mut Vec<CDir>) -> bool {
+    let mut proposed: HashMap<Coord2D,usize> = HashMap::new();
     let mut done = true;
 
     // phase 1
     for elf in elves.iter_mut() {
-        let elfat = |x, y| -> bool { matches!(grid.get(x, y), Cell::Elf) };
+        let elfat = |loc| -> bool { matches!(grid.get_c(loc), Cell::Elf) };
         elf.proposed = None;
-        if elfat(elf.x - 1, elf.y - 1) || elfat(elf.x, elf.y - 1) || elfat(elf.x + 1, elf.y - 1)
-                || elfat(elf.x - 1, elf.y) ||                             elfat(elf.x + 1, elf.y)
-                || elfat(elf.x - 1, elf.y + 1) || elfat(elf.x, elf.y + 1) || elfat(elf.x + 1, elf.y + 1) {
+        if elf.loc.neighbors8().iter().any(|c| elfat(*c)) {
             for dir in searchorder.iter() {
                 match dir {
-                    Dir::North => {
-                        if !elfat(elf.x - 1, elf.y - 1) && !elfat(elf.x, elf.y - 1) && !elfat(elf.x + 1, elf.y - 1) {
-                            elf.proposed = Some((elf.x, elf.y - 1));
+                    CDir::N => {
+                        let nor = elf.loc + CDir::N;
+                        if !elfat(nor + CDir::E) && !elfat(nor) && !elfat(nor + CDir::W) {
+                            elf.proposed = Some(nor);
                             break;
                         }
                     },
-                    Dir::South => {
-                        if !elfat(elf.x - 1, elf.y + 1) && !elfat(elf.x, elf.y + 1) && !elfat(elf.x + 1, elf.y + 1) {
-                            elf.proposed = Some((elf.x, elf.y + 1));
+                    CDir::S => {
+                        let sou = elf.loc + CDir::S;
+                        if !elfat(sou + CDir::E) && !elfat(sou) && !elfat(sou + CDir::W) {
+                            elf.proposed = Some(sou);
                             break;
                         }
                     },
-                    Dir::West => {
-                        if !elfat(elf.x - 1, elf.y - 1) && !elfat(elf.x - 1, elf.y) && !elfat(elf.x - 1, elf.y + 1) {
-                            elf.proposed = Some((elf.x - 1, elf.y));
+                    CDir::W => {
+                        let wes = elf.loc + CDir::W;
+                        if !elfat(wes + CDir::N) && !elfat(wes) && !elfat(wes + CDir::S) {
+                            elf.proposed = Some(wes);
                             break;
                         }
                     },
-                    Dir::East => {
-                        if !elfat(elf.x + 1, elf.y - 1) && !elfat(elf.x + 1, elf.y) && !elfat(elf.x + 1, elf.y + 1) {
-                            elf.proposed = Some((elf.x + 1, elf.y));
+                    CDir::E => {
+                        let eas = elf.loc + CDir::E;
+                        if !elfat(eas + CDir::N) && !elfat(eas) && !elfat(eas + CDir::S) {
+                            elf.proposed = Some(eas);
                             break;
                         }
                     },
                 }
             }
             if let Some(p) = elf.proposed {
-                if let Some(val) = proposed.get_mut(&p) {
-                    *val += 1;
-                } else {
-                    proposed.insert(p, 1);
-                }
+                proposed.entry(p)
+                    .and_modify(|v| *v += 1)
+                    .or_insert(1);
             }
         }
     }
@@ -79,10 +72,9 @@ fn step(grid: &mut InfiniteGrid<Cell>, elves: &mut [Elf], searchorder: &mut Vec<
         if let Some(p) = elf.proposed {
             if proposed[&p] == 1 {
                 done = false;
-                grid.set(elf.x, elf.y, Cell::Empty);
-                elf.x = p.0;
-                elf.y = p.1;
-                grid.set(elf.x, elf.y, Cell::Elf);
+                grid.set_c(elf.loc, Cell::Empty);
+                elf.loc = p;
+                grid.set_c(elf.loc, Cell::Elf);
             }
         }
     }
@@ -98,8 +90,8 @@ fn run(input: &[String], max_iters: i64) -> (i64, usize) {
         '#' => Some(Cell::Elf),
         _ => panic!(),
     });
-    let mut elves:Vec<Elf> = grid.iter().map(|((x,y),_)| Elf { x: *x, y: *y, proposed: None }).collect();
-    let mut searchorder:Vec<Dir> = vec![Dir::North, Dir::South, Dir::West, Dir::East];
+    let mut elves:Vec<Elf> = grid.iter().map(|((x,y),_)| Elf { loc: (*x, *y).into(), proposed: None }).collect();
+    let mut searchorder:Vec<CDir> = vec![CDir::N, CDir::S, CDir::W, CDir::E];
     //grid.print(|c| match c { Cell::Elf => '#', _ => '.' });
     //println!("");
     let mut n_iters: usize = 1;

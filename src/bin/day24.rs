@@ -1,39 +1,31 @@
 use std::collections::{BinaryHeap, HashSet, HashMap};
 use std::cmp::Ordering;
 use std::vec::Vec;
+use ya_advent_lib::coords::{CDir, Coord2D};
 use ya_advent_lib::read::read_input;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-enum Dir {
-    North,
-    East,
-    South,
-    West,
-}
-
-type Coord = (i64, i64);
 type Step = i64;
 type Leg = i64;
 
 struct Blizzard {
-    initial_pos: Coord,
-    dir: Dir,
+    initial_pos: Coord2D,
+    dir: CDir,
 }
 
 impl Blizzard {
-    fn pos_at(&self, step: Step, width: i64, height: i64) -> Coord {
+    fn pos_at(&self, step: Step, width: i64, height: i64) -> Coord2D {
         match self.dir {
-            Dir::North => (self.initial_pos.0, (self.initial_pos.1 - step).rem_euclid(height)),
-            Dir::South => (self.initial_pos.0, (self.initial_pos.1 + step).rem_euclid(height)),
-            Dir::East => ((self.initial_pos.0 + step).rem_euclid(width), self.initial_pos.1),
-            Dir::West => ((self.initial_pos.0 - step).rem_euclid(width), self.initial_pos.1),
+            CDir::N => Coord2D::new(self.initial_pos.x, (self.initial_pos.y - step).rem_euclid(height)),
+            CDir::S => Coord2D::new(self.initial_pos.x, (self.initial_pos.y + step).rem_euclid(height)),
+            CDir::E => Coord2D::new((self.initial_pos.x + step).rem_euclid(width), self.initial_pos.y),
+            CDir::W => Coord2D::new((self.initial_pos.x - step).rem_euclid(width), self.initial_pos.y),
         }
     }
 }
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 struct State {
-    pos: Coord,
+    pos: Coord2D,
     dist: i64,
     step: Step,
     leg: Leg,
@@ -43,8 +35,7 @@ impl Ord for State {
     fn cmp(&self, other: &State) -> Ordering {
         other.dist.cmp(&self.dist)
             .then_with(|| other.step.cmp(&self.step))
-            .then_with(|| other.pos.1.cmp(&self.pos.1))
-            .then_with(|| other.pos.0.cmp(&self.pos.0))
+            .then_with(|| other.pos.cmp(&self.pos))
     }
 }
 
@@ -53,10 +44,6 @@ impl PartialOrd for State {
     fn partial_cmp(&self, other: &State) -> Option<Ordering> {
         Some(self.cmp(other))
     }
-}
-
-fn md(pos1: &Coord, pos2: &Coord) -> i64 {
-    (pos1.0 - pos2.0).abs() + (pos1.1 - pos2.1).abs()
 }
 
 struct Valley {
@@ -80,14 +67,14 @@ impl Valley {
                     _ => {},
                 }
                 let dir = match c {
-                    '^' => Dir::North,
-                    '>' => Dir::East,
-                    'v' => Dir::South,
-                    '<' => Dir::West,
+                    '^' => CDir::N,
+                    '>' => CDir::E,
+                    'v' => CDir::S,
+                    '<' => CDir::W,
                     _ => panic!(),
                 };
                 blizzards.push(Blizzard {
-                    initial_pos: (x as i64, height),
+                    initial_pos: Coord2D::new(x as i64, height),
                     dir,
                 });
             }
@@ -101,8 +88,8 @@ impl Valley {
     }
 
     fn search(&self, nlegs: Leg) -> i64 {
-        let entrance:Coord = (0i64, -1i64);
-        let exit:Coord = (self.width - 1, self.height);
+        let entrance = Coord2D::new(0, -1);
+        let exit = Coord2D::new(self.width - 1, self.height);
         let mut byrow: HashMap<i64, Vec<usize>> = HashMap::from_iter(
             (0..self.height).map(|y| (y, Vec::new()))
         );
@@ -111,22 +98,22 @@ impl Valley {
         );
         for (idx, b) in self.blizzards.iter().enumerate() {
             match b.dir {
-                Dir::East | Dir::West => {
-                    byrow.get_mut(&b.initial_pos.1).unwrap().push(idx);
+                CDir::E | CDir::W => {
+                    byrow.get_mut(&b.initial_pos.y).unwrap().push(idx);
                 },
-                Dir::North | Dir::South => {
-                    bycol.get_mut(&b.initial_pos.0).unwrap().push(idx);
+                CDir::N | CDir::S => {
+                    bycol.get_mut(&b.initial_pos.x).unwrap().push(idx);
                 },
             }
         }
 
         //let mut came_from: HashMap<(Coord,Step),(Coord,Step)> = HashMap::new();
-        let mut gscore: HashMap<(Coord,Step),i64> = HashMap::new();
+        let mut gscore: HashMap<(Coord2D, Step),i64> = HashMap::new();
         gscore.insert((entrance, 0), 0);
 
         let mut leg: Leg = 0;
         let mut heap: BinaryHeap<State> = BinaryHeap::new();
-        heap.push(State { pos: entrance, dist: md(&entrance, &exit) * nlegs, step: 0, leg: 0 });
+        heap.push(State { pos: entrance, dist: &entrance.mdist_to(&exit) * nlegs, step: 0, leg: 0 });
         while let Some(state) = heap.pop() {
             //println!("state {:?}", state);
             if state.leg < leg { continue; }
@@ -154,42 +141,42 @@ impl Valley {
                 //println!("at entrance, leg={} step={}", leg, state.step);
                 leg += 1;
             }
-            let row: HashSet<i64> = if state.pos.1 < 0 || state.pos.1 == self.height {
+            let row: HashSet<i64> = if state.pos.y < 0 || state.pos.y == self.height {
                     HashSet::new()
                 } else {
-                    byrow[&state.pos.1].iter()
-                        .map(|idx| self.blizzards[*idx].pos_at(state.step + 1, self.width, self.height).0).collect()
+                    byrow[&state.pos.y].iter()
+                        .map(|idx| self.blizzards[*idx].pos_at(state.step + 1, self.width, self.height).x).collect()
                 };
-            let n_row: HashSet<i64> = if state.pos.1 < 1 {
+            let n_row: HashSet<i64> = if state.pos.y < 1 {
                     HashSet::new()
                 } else {
-                    byrow[&(state.pos.1 - 1)].iter()
-                        .map(|idx| self.blizzards[*idx].pos_at(state.step + 1, self.width, self.height).0).collect()
+                    byrow[&(state.pos.y - 1)].iter()
+                        .map(|idx| self.blizzards[*idx].pos_at(state.step + 1, self.width, self.height).x).collect()
                 };
-            let s_row: HashSet<i64> = if state.pos.1 + 1 >= self.height {
+            let s_row: HashSet<i64> = if state.pos.y + 1 >= self.height {
                     HashSet::new()
                 } else {
-                    byrow[&(state.pos.1 + 1)].iter()
-                        .map(|idx| self.blizzards[*idx].pos_at(state.step + 1, self.width, self.height).0).collect()
+                    byrow[&(state.pos.y + 1)].iter()
+                        .map(|idx| self.blizzards[*idx].pos_at(state.step + 1, self.width, self.height).x).collect()
                 };
-            let col: HashSet<i64> = bycol[&state.pos.0].iter()
-                .map(|idx| self.blizzards[*idx].pos_at(state.step + 1, self.width, self.height).1).collect();
-            let w_col: HashSet<i64> = if state.pos.0 < 1 {
+            let col: HashSet<i64> = bycol[&state.pos.x].iter()
+                .map(|idx| self.blizzards[*idx].pos_at(state.step + 1, self.width, self.height).y).collect();
+            let w_col: HashSet<i64> = if state.pos.x < 1 {
                     HashSet::new()
                 } else {
-                    bycol[&(state.pos.0 - 1)].iter()
-                    .map(|idx| self.blizzards[*idx].pos_at(state.step + 1, self.width, self.height).1).collect()
+                    bycol[&(state.pos.x - 1)].iter()
+                    .map(|idx| self.blizzards[*idx].pos_at(state.step + 1, self.width, self.height).y).collect()
                 };
-            let e_col: HashSet<i64> = if state.pos.0 + 1 >= self.width {
+            let e_col: HashSet<i64> = if state.pos.x + 1 >= self.width {
                     HashSet::new()
                 } else {
-                    bycol[&(state.pos.0 + 1)].iter()
-                    .map(|idx| self.blizzards[*idx].pos_at(state.step + 1, self.width, self.height).1).collect()
+                    bycol[&(state.pos.x + 1)].iter()
+                    .map(|idx| self.blizzards[*idx].pos_at(state.step + 1, self.width, self.height).y).collect()
                 };
 
-            let mut add = |c: Coord, incr: i64| {
-                if c.0 < 0 || c.1 < -1 || (c.1 == -1 && c.0 != entrance.0)
-                        || c.0 >= self.width || c.1 > self.height || (c.1 == self.height && c.0 != exit.0) {
+            let mut add = |c: Coord2D, incr: i64| {
+                if c.x < 0 || c.y < -1 || (c.y == -1 && c.x != entrance.x)
+                        || c.x >= self.width || c.y > self.height || (c.y == self.height && c.x != exit.x) {
                     return;
                 }
                 let new_gscore = gscore[&(state.pos, state.step)] + incr;
@@ -199,17 +186,27 @@ impl Valley {
                     //came_from.insert((c, state.step + 1), (state.pos, state.step));
                     heap.push(State {
                         pos: c,
-                        dist: new_gscore + md(&c, if leg & 1 == 1 { &entrance } else { &exit }) + (nlegs - 1 - leg) * md(&entrance, &exit),
+                        dist: new_gscore + c.mdist_to(if leg & 1 == 1 { &entrance } else { &exit }) + (nlegs - 1 - leg) * entrance.mdist_to(&exit),
                         step: state.step + 1,
                         leg,
                     });
                 }
             };
-            if !col.contains(&(state.pos.1 - 1)) && !n_row.contains(&state.pos.0) { add((state.pos.0, state.pos.1 - 1), 1); }
-            if !col.contains(&(state.pos.1 + 1)) && !s_row.contains(&state.pos.0) { add((state.pos.0, state.pos.1 + 1), 1); }
-            if !row.contains(&(state.pos.0 + 1)) && !e_col.contains(&state.pos.1) { add((state.pos.0 + 1, state.pos.1), 1); }
-            if !row.contains(&(state.pos.0 - 1)) && !w_col.contains(&state.pos.1) { add((state.pos.0 - 1, state.pos.1), 1); }
-            if !row.contains(&state.pos.0) && !col.contains(&state.pos.1) { add(state.pos, 1); }
+            if !col.contains(&(state.pos.y - 1)) && !n_row.contains(&state.pos.x) {
+                add(Coord2D::new(state.pos.x, state.pos.y - 1), 1);
+            }
+            if !col.contains(&(state.pos.y + 1)) && !s_row.contains(&state.pos.x) {
+                add(Coord2D::new(state.pos.x, state.pos.y + 1), 1);
+            }
+            if !row.contains(&(state.pos.x + 1)) && !e_col.contains(&state.pos.y) {
+                add(Coord2D::new(state.pos.x + 1, state.pos.y), 1);
+            }
+            if !row.contains(&(state.pos.x - 1)) && !w_col.contains(&state.pos.y) {
+                add(Coord2D::new(state.pos.x - 1, state.pos.y), 1);
+            }
+            if !row.contains(&state.pos.x) && !col.contains(&state.pos.y) {
+                add(state.pos, 1);
+            }
         }
         panic!("no path found");
     }
