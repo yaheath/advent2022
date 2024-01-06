@@ -204,13 +204,13 @@ fn search(bp: &Blueprint, timelimit: usize) -> usize {
     best
 }
 
-fn part1(input: &Vec<Blueprint>) -> usize {
+fn part1(input: &[Blueprint]) -> usize {
     input.iter().enumerate()
         .map(|(idx, bp)| (idx + 1) * search(bp, 24))
         .sum()
 }
 
-fn part2(input: &Vec<Blueprint>) -> usize {
+fn part2(input: &[Blueprint]) -> usize {
     input.iter().take(3)
         .map(|bp| search(bp, 32))
         .product()

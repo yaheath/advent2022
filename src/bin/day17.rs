@@ -39,7 +39,7 @@ struct Rock<'a> {
     cells: &'a [(usize,usize)],
 }
 
-const ROCKS: &'static [Rock] = &[
+const ROCKS: &[Rock] = &[
     Rock { id: Cell::A, cells: &[ (0, 0), (1, 0), (2, 0), (3, 0) ]},
     Rock { id: Cell::B, cells: &[ (1, 0), (0, 1), (1, 1), (2, 1), (1, 2) ]},
     Rock { id: Cell::C, cells: &[ (0, 0), (1, 0), (2, 0), (2, 1), (2, 2) ]},
@@ -50,7 +50,7 @@ const ROCKS: &'static [Rock] = &[
 type Row = [Cell; 7];
 
 impl Rock<'_> {
-    fn collides(&self, x: usize, y: usize, shaft: &Vec<Row>) -> bool {
+    fn collides(&self, x: usize, y: usize, shaft: &[Row]) -> bool {
         for (cx, cy) in self.cells {
             if cx + x > 6 { return true; }
             if cy + y >= shaft.len() { continue; }
@@ -72,7 +72,7 @@ impl Rock<'_> {
     }
 }
 
-fn simulate(pushpattern: &Vec<Push>, n_rocks: usize) -> usize {
+fn simulate(pushpattern: &[Push], n_rocks: usize) -> usize {
     let mut shaft: Vec<Row> = Vec::new();
     let mut cur_rock_idx: usize = 0;
     let mut cur_push_idx: usize = 0;
@@ -127,14 +127,14 @@ fn simulate(pushpattern: &Vec<Push>, n_rocks: usize) -> usize {
             }
         }
     }
-    return shaft.len() + repeated_rows;
+    shaft.len() + repeated_rows
 }
 
-fn part1(pushpattern: &Vec<Push>) -> usize {
+fn part1(pushpattern: &[Push]) -> usize {
     simulate(pushpattern, 2022)
 }
 
-fn part2(pushpattern: &Vec<Push>) -> usize {
+fn part2(pushpattern: &[Push]) -> usize {
     simulate(pushpattern, 1000000000000)
 }
 

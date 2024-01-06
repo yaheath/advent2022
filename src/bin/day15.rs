@@ -40,7 +40,7 @@ impl FromStr for Sensor {
     }
 }
 
-fn bsearch(list: &Vec<i64>, range: &Range<i64>) -> usize {
+fn bsearch(list: &[i64], range: &Range<i64>) -> usize {
     let (start_has_val, start_idx) = match list.binary_search(&range.start) {
         Ok(val) => (true, val),
         Err(val) => (false, val),
@@ -60,7 +60,7 @@ fn bsearch(list: &Vec<i64>, range: &Range<i64>) -> usize {
     }
 }
 
-fn searchrow(input: &Vec<Sensor>, tgtrow: i64) -> (Vec<Range<i64>>, Vec<i64>) {
+fn searchrow(input: &[Sensor], tgtrow: i64) -> (Vec<Range<i64>>, Vec<i64>) {
     let mut ranges:Vec<Range<i64>> = Vec::new();
     let mut beacons: HashSet<i64> = HashSet::new();
     for row in input {
@@ -80,7 +80,7 @@ fn searchrow(input: &Vec<Sensor>, tgtrow: i64) -> (Vec<Range<i64>>, Vec<i64>) {
     (merged_ranges, sorted_beacons)
 }
 
-fn part1(input: &Vec<Sensor>, at_y: i64) -> i64 {
+fn part1(input: &[Sensor], at_y: i64) -> i64 {
     let (ranges, beacons) = searchrow(input, at_y);
     let mut sum = 0i64;
     for range in ranges {
@@ -90,7 +90,7 @@ fn part1(input: &Vec<Sensor>, at_y: i64) -> i64 {
     sum
 }
 
-fn part2(input: &Vec<Sensor>, max: i64) -> i64 {
+fn part2(input: &[Sensor], max: i64) -> i64 {
     let mut x:i64 = 0;
     let mut y:i64 = 0;
     for row in 0..=max {

@@ -17,7 +17,7 @@ fn movenum(array: &mut Vec<Num>, idx: usize, dx: i64) {
     array.splice(newidx..newidx, [item]);
 }
 
-fn mix(input: &Vec<i64>, nums: &mut Vec<Num>) {
+fn mix(input: &[i64], nums: &mut Vec<Num>) {
     for (i, _) in input.iter().enumerate() {
         let (idx, num) = nums.iter().enumerate().find(|(_, n)| n.initial_idx == i).unwrap();
         if num.value != 0 {
@@ -31,7 +31,7 @@ fn mix(input: &Vec<i64>, nums: &mut Vec<Num>) {
     */
 }
 
-fn bothparts(input: &Vec<i64>, part2: bool) -> i64 {
+fn bothparts(input: &[i64], part2: bool) -> i64 {
     let mut nums: Vec<Num> = Vec::with_capacity(input.len());
     let key: i64 = if part2 { 811589153 } else { 1 };
     for (idx, v) in input.iter().enumerate() {

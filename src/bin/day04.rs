@@ -34,8 +34,8 @@ impl FromStr for Pair {
 
 impl Pair {
     fn is_contained(&self) -> bool {
-        self.a.contains(&self.b.start()) && self.a.contains(&self.b.end())
-            || self.b.contains(&self.a.start()) && self.b.contains(&self.a.end())
+        self.a.contains(self.b.start()) && self.a.contains(self.b.end())
+            || self.b.contains(self.a.start()) && self.b.contains(self.a.end())
     }
     fn is_overlapped(&self) -> bool {
         self.a.start() <= self.b.start() && self.a.end() >= self.b.start()
@@ -43,11 +43,11 @@ impl Pair {
     }
 }
 
-fn part1(input: &Vec<Pair>) -> usize {
+fn part1(input: &[Pair]) -> usize {
     input.iter().filter(|p| p.is_contained()).count()
 }
 
-fn part2(input: &Vec<Pair>) -> usize {
+fn part2(input: &[Pair]) -> usize {
     input.iter().filter(|p| p.is_overlapped()).count()
 }
 

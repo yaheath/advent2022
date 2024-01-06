@@ -13,7 +13,7 @@ struct Area {
 }
 
 impl Area {
-    fn from_input(input: &Vec<Coord3D>) -> Self {
+    fn from_input(input: &[Coord3D]) -> Self {
         let mut cubes: HashSet<Coord3D> = HashSet::new();
         let mut x_range: Range<i64> = Range {start: 0, end: 0};
         let mut y_range: Range<i64> = Range {start: 0, end: 0};
@@ -42,14 +42,13 @@ impl Area {
 
 fn part1(area: &Area) -> usize {
     area.cubes.iter()
-        .map(|loc| loc.neighbors6())
-        .flatten()
+        .flat_map(|loc| loc.neighbors6())
         .filter(|loc| !area.cubes.contains(loc))
         .count()
 }
 
 fn flood_fill(steam: &mut HashSet<Coord3D>, area: &Area, coord: &Coord3D) {
-    steam.insert(coord.clone());
+    steam.insert(*coord);
 
     coord.neighbors6().iter()
         .filter(|c| !area.cubes.contains(c))
@@ -71,8 +70,7 @@ fn part2(area: &Area) -> usize {
     let mut steam: HashSet<Coord3D> = HashSet::new();
     flood_fill(&mut steam, area, &Coord3D::new(area.x_range.end, area.y_range.end, area.z_range.end));
     area.cubes.iter()
-        .map(|loc| loc.neighbors6())
-        .flatten()
+        .flat_map(|loc| loc.neighbors6())
         .filter(|loc| steam.contains(loc))
         .count()
 }

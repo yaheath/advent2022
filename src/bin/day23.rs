@@ -25,13 +25,13 @@ enum Dir {
     West,
 }
 
-fn step(grid: &mut InfiniteGrid<Cell>, elves: &mut Vec<Elf>, searchorder: &mut Vec<Dir>) -> bool {
+fn step(grid: &mut InfiniteGrid<Cell>, elves: &mut [Elf], searchorder: &mut Vec<Dir>) -> bool {
     let mut proposed: HashMap<(i64,i64),usize> = HashMap::new();
     let mut done = true;
 
     // phase 1
     for elf in elves.iter_mut() {
-        let elfat = |x, y| -> bool { match grid.get(x, y) { Cell::Elf => true, _ => false } };
+        let elfat = |x, y| -> bool { matches!(grid.get(x, y), Cell::Elf) };
         elf.proposed = None;
         if elfat(elf.x - 1, elf.y - 1) || elfat(elf.x, elf.y - 1) || elfat(elf.x + 1, elf.y - 1)
                 || elfat(elf.x - 1, elf.y) ||                             elfat(elf.x + 1, elf.y)
@@ -64,33 +64,27 @@ fn step(grid: &mut InfiniteGrid<Cell>, elves: &mut Vec<Elf>, searchorder: &mut V
                     },
                 }
             }
-            match elf.proposed {
-                Some(p) => {
-                    if let Some(val) = proposed.get_mut(&p) {
-                        *val += 1;
-                    } else {
-                        proposed.insert(p, 1);
-                    }
-                },
-                None => {},
+            if let Some(p) = elf.proposed {
+                if let Some(val) = proposed.get_mut(&p) {
+                    *val += 1;
+                } else {
+                    proposed.insert(p, 1);
+                }
             }
         }
     }
 
     // phase 2
     for elf in elves.iter_mut() {
-        match elf.proposed {
-            Some(p) => {
-                if proposed[&p] == 1 {
-                    done = false;
-                    grid.set(elf.x, elf.y, Cell::Empty);
-                    elf.x = p.0;
-                    elf.y = p.1;
-                    grid.set(elf.x, elf.y, Cell::Elf);
-                }
-            },
-            None => {},
-        };
+        if let Some(p) = elf.proposed {
+            if proposed[&p] == 1 {
+                done = false;
+                grid.set(elf.x, elf.y, Cell::Empty);
+                elf.x = p.0;
+                elf.y = p.1;
+                grid.set(elf.x, elf.y, Cell::Elf);
+            }
+        }
     }
 
     let s = searchorder.splice(0..1, []).next().unwrap();
@@ -98,8 +92,8 @@ fn step(grid: &mut InfiniteGrid<Cell>, elves: &mut Vec<Elf>, searchorder: &mut V
     done
 }
 
-fn run(input: &Vec<String>, max_iters: i64) -> (i64, usize) {
-    let mut grid: InfiniteGrid<Cell> = InfiniteGrid::from_input(&input, Cell::Empty, |c, _, _| match c {
+fn run(input: &[String], max_iters: i64) -> (i64, usize) {
+    let mut grid: InfiniteGrid<Cell> = InfiniteGrid::from_input(input, Cell::Empty, |c, _, _| match c {
         '.' => None,
         '#' => Some(Cell::Elf),
         _ => panic!(),
@@ -119,34 +113,29 @@ fn run(input: &Vec<String>, max_iters: i64) -> (i64, usize) {
     }
     let mut x_range: Range<i64> = Range { start: 0, end: 0 };
     let mut y_range: Range<i64> = Range { start: 0, end: 0 };
-    for ((x, y), c) in grid.iter() {
-        match c {
-            Cell::Elf => {
-                if x_range.is_empty() {
-                    x_range.start = *x;
-                    x_range.end = *x + 1;
-                    y_range.start = *y;
-                    y_range.end = *y + 1;
-                } else {
-                    x_range.start = min(x_range.start, *x);
-                    x_range.end = max(x_range.end, *x + 1);
-                    y_range.start = min(y_range.start, *y);
-                    y_range.end = max(y_range.end, *y + 1);
-                }
-            },
-            _ => {},
-        };
+    for ((x, y), _) in grid.iter().filter(|(_, c)| matches!(c, Cell::Elf)) {
+        if x_range.is_empty() {
+            x_range.start = *x;
+            x_range.end = *x + 1;
+            y_range.start = *y;
+            y_range.end = *y + 1;
+        } else {
+            x_range.start = min(x_range.start, *x);
+            x_range.end = max(x_range.end, *x + 1);
+            y_range.start = min(y_range.start, *y);
+            y_range.end = max(y_range.end, *y + 1);
+        }
     }
     let empties = (x_range.end - x_range.start) * (y_range.end - y_range.start) - (elves.len() as i64);
     (empties, n_iters)
 }
 
-fn part1(input: &Vec<String>) -> i64 {
+fn part1(input: &[String]) -> i64 {
     let (value, _) = run(input, 10);
     value
 }
 
-fn part2(input: &Vec<String>) -> usize {
+fn part2(input: &[String]) -> usize {
     let (_, value) = run(input, i64::MAX);
     value
 }

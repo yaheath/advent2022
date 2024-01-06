@@ -109,27 +109,27 @@ fn score1(turn: &RawTurn) -> i32 {
     let opponent_move = RULES.opponent_map.get(&*turn.opponent).unwrap();
     let my_move = RULES.my_map.get(&*turn.me).unwrap();
 
-    let outcome = get_outcome(&my_move, &opponent_move);
+    let outcome = get_outcome(my_move, opponent_move);
 
-    RULES.move_scoring.get(&my_move).unwrap()
+    RULES.move_scoring.get(my_move).unwrap()
       + RULES.outcome_scoring.get(&outcome).unwrap()
 }
 
-fn part1(input: &Vec<RawTurn>) -> i32 {
-    input.iter().map(|turn| score1(&turn)).sum::<i32>()
+fn part1(input: &[RawTurn]) -> i32 {
+    input.iter().map(score1).sum::<i32>()
 }
 
 fn score2(turn: &RawTurn) -> i32 {
     let opponent_move = RULES.opponent_map.get(&*turn.opponent).unwrap();
-    let my_move = get_move(RULES.outcome_map.get(&*turn.me).unwrap(), &opponent_move);
+    let my_move = get_move(RULES.outcome_map.get(&*turn.me).unwrap(), opponent_move);
 
-    let outcome = get_outcome(&my_move, &opponent_move);
+    let outcome = get_outcome(&my_move, opponent_move);
 
     RULES.move_scoring.get(&my_move).unwrap()
       + RULES.outcome_scoring.get(&outcome).unwrap()
 }
-fn part2(input: &Vec<RawTurn>) -> i32 {
-    input.iter().map(|turn| score2(&turn)).sum::<i32>()
+fn part2(input: &[RawTurn]) -> i32 {
+    input.iter().map(score2).sum::<i32>()
 }
 
 fn main() {

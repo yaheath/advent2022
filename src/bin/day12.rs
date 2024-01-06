@@ -42,9 +42,9 @@ struct State {
 impl State {
     fn new(x: i64, y: i64, dist: i64) -> Self {
         State {
-            dist: dist,
-            x: x,
-            y: y,
+            dist,
+            x,
+            y,
         }
     }
     fn key(&self) -> (i64, i64) {
@@ -80,11 +80,8 @@ fn search(grid: &Grid<Cell>, startx: i64, starty: i64) -> i64 {
             continue;
         }
         let cell = grid.get(state.x, state.y);
-        match cell {
-            Cell::End => {
-                return state.dist;
-            },
-            _ => {},
+        if cell == Cell::End {
+            return state.dist;
         }
         let elev:u8 = cell.elev() ;
         let mut check = |x: i64, y: i64| {
@@ -92,11 +89,9 @@ fn search(grid: &Grid<Cell>, startx: i64, starty: i64) -> i64 {
                 return;
             }
             let ncell = grid.get(x, y);
-            if ncell.elev() <= elev + 1 {
-                if !dists.contains_key(&(x,y)) || state.dist + 1 < dists[&(x,y)] {
-                    dists.insert((x,y), state.dist + 1);
-                    heap.push(State::new(x, y, state.dist + 1));
-                }
+            if ncell.elev() <= elev + 1 && (!dists.contains_key(&(x,y)) || state.dist + 1 < dists[&(x,y)]) {
+                dists.insert((x,y), state.dist + 1);
+                heap.push(State::new(x, y, state.dist + 1));
             }
         };
         check(state.x + 1, state.y);

@@ -2,11 +2,11 @@ use std::vec::Vec;
 use itertools::Itertools;
 use ya_advent_lib::read::read_grouped_input;
 
-fn part1(input: &Vec<Vec<i64>>) -> i64 {
+fn part1(input: &[Vec<i64>]) -> i64 {
     input.iter().map(|row| row.iter().sum::<i64>()).max().unwrap()
 }
 
-fn part2(input: &Vec<Vec<i64>>) -> i64 {
+fn part2(input: &[Vec<i64>]) -> i64 {
     input.iter()
         .map(|row| row.iter().sum::<i64>())
         .sorted()

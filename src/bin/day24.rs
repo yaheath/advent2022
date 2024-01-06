@@ -88,7 +88,7 @@ impl Valley {
                 };
                 blizzards.push(Blizzard {
                     initial_pos: (x as i64, height),
-                    dir: dir,
+                    dir,
                 });
             }
             height += 1;
@@ -201,7 +201,7 @@ impl Valley {
                         pos: c,
                         dist: new_gscore + md(&c, if leg & 1 == 1 { &entrance } else { &exit }) + (nlegs - 1 - leg) * md(&entrance, &exit),
                         step: state.step + 1,
-                        leg: leg,
+                        leg,
                     });
                 }
             };

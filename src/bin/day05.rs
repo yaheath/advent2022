@@ -27,11 +27,11 @@ impl FromStr for StackRow {
         }
         if let Some(caps) = RE.captures(&ss) {
             let mut cols:[char; 9] = [' '; 9];
-            for i in 0..9 {
+            for (i, col) in cols.iter_mut().enumerate() {
                 let c = caps.get(i+1).unwrap();
-                cols[i] = c.as_str().chars().next().unwrap();
+                *col = c.as_str().chars().next().unwrap();
             }
-            Ok(StackRow { cols: cols })
+            Ok(StackRow { cols })
         }
         else {
             Err(())
@@ -66,14 +66,14 @@ fn part(input: &Input, part: i32) -> String {
 
     // omit the last StackRow as it will be the number labels of the stacks
     for row in &input.0[0 .. input.0.len() - 1] {
-        for i in 0..9 {
+        for (i, stack) in stacks.iter_mut().enumerate() {
             if row.cols[i] != ' ' {
-                stacks[i].push(row.cols[i]);
+                stack.push(row.cols[i]);
             }
         }
     }
-    for i in 0..9 {
-        stacks[i].reverse();
+    for stack in &mut stacks {
+        stack.reverse();
     }
     // println!("{stacks:?}");
     for mv in moves {
@@ -93,7 +93,7 @@ fn part(input: &Input, part: i32) -> String {
             }
         }
     }
-    (0..9).filter_map(|i| stacks[i].last()).collect::<String>()
+    stacks.iter().filter_map(|s| s.last()).collect::<String>()
 }
 
 fn main() {

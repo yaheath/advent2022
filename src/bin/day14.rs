@@ -12,7 +12,7 @@ impl FromStr for CoordList {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let v: Vec<(i64, i64)> = s.split(" -> ")
             .map(|c| {
-                let nn:Vec<i64> = c.split(",").map(|cc| cc.parse::<i64>().unwrap()).collect();
+                let nn:Vec<i64> = c.split(',').map(|cc| cc.parse::<i64>().unwrap()).collect();
                 (nn[0], nn[1])
             })
             .collect();
@@ -27,7 +27,7 @@ enum Cell {
     Sand,
 }
 
-fn make_grid(input: &Vec<CoordList>) -> InfiniteGrid<Cell> {
+fn make_grid(input: &[CoordList]) -> InfiniteGrid<Cell> {
     let mut grid = InfiniteGrid::new(Cell::Empty);
 
     for row in input {
@@ -92,8 +92,8 @@ fn placesand(grid: &mut InfiniteGrid<Cell>, start_x: i64, start_y: i64, floor: i
     false
 }
 
-fn part1(input: &Vec<CoordList>) -> usize {
-    let mut grid = make_grid(&input);
+fn part1(input: &[CoordList]) -> usize {
+    let mut grid = make_grid(input);
     let mut count: usize = 0;
     while placesand(&mut grid, 500, 0, 0) {
         count += 1;
@@ -102,8 +102,8 @@ fn part1(input: &Vec<CoordList>) -> usize {
     count
 }
 
-fn part2(input: &Vec<CoordList>) -> usize {
-    let mut grid = make_grid(&input);
+fn part2(input: &[CoordList]) -> usize {
+    let mut grid = make_grid(input);
     let mut count: usize = 0;
     let floor = grid.y_bounds().end;
     while placesand(&mut grid, 500, 0, floor) {

@@ -70,7 +70,7 @@ impl MoveToward for Coord2D {
     }
 }
 
-fn do_moves(input: &Vec<Move>, depth: usize) -> usize {
+fn do_moves(input: &[Move], depth: usize) -> usize {
     let mut visited: HashSet<Coord2D> = HashSet::new();
     let mut chain = vec![Coord2D::new(0,0); depth];
     for mv in input {
@@ -88,11 +88,11 @@ fn do_moves(input: &Vec<Move>, depth: usize) -> usize {
     visited.len()
 }
 
-fn part1(input: &Vec<Move>) -> usize {
+fn part1(input: &[Move]) -> usize {
     do_moves(input, 2)
 }
 
-fn part2(input: &Vec<Move>) -> usize {
+fn part2(input: &[Move]) -> usize {
     do_moves(input, 10)
 }
 

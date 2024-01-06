@@ -11,9 +11,9 @@ impl Snafu {
     fn to_s( val: i64) -> String {
         if val == 0 { return "".into(); }
         match val % 5 {
-            0 | 1 | 2 => Self::to_s(val / 5) + &((val % 5).to_string()),
-            3 => Self::to_s(1 + val / 5) + "=".into(),
-            4 => Self::to_s(1 + val / 5) + "-".into(),
+            0..=2 => Self::to_s(val / 5) + &((val % 5).to_string()),
+            3 => Self::to_s(1 + val / 5) + "=",
+            4 => Self::to_s(1 + val / 5) + "-",
             _ => panic!(),
         }
     }

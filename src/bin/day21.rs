@@ -37,7 +37,7 @@ impl FromStr for Monkey {
             let a:String = caps.get(2).unwrap().as_str().into();
             let b:String = caps.get(4).unwrap().as_str().into();
             Ok(Monkey {
-                name: name,
+                name,
                 op: match caps.get(3).unwrap().as_str() {
                     "+" => Op::Add(a, b),
                     "-" => Op::Sub(a, b),
@@ -54,17 +54,16 @@ impl FromStr for Monkey {
 }
 
 fn resolve(monkey: &str, monkeys: &HashMap<&str,&Monkey>) -> i64 {
-    let val = match &monkeys[monkey].op {
+    match &monkeys[monkey].op {
         Op::Const(n) => *n,
-        Op::Add(a, b) => resolve(&a, monkeys) + resolve(&b, monkeys),
-        Op::Sub(a, b) => resolve(&a, monkeys) - resolve(&b, monkeys),
-        Op::Mul(a, b) => resolve(&a, monkeys) * resolve(&b, monkeys),
-        Op::Div(a, b) => resolve(&a, monkeys) / resolve(&b, monkeys),
-    };
-    val
+        Op::Add(a, b) => resolve(a, monkeys) + resolve(b, monkeys),
+        Op::Sub(a, b) => resolve(a, monkeys) - resolve(b, monkeys),
+        Op::Mul(a, b) => resolve(a, monkeys) * resolve(b, monkeys),
+        Op::Div(a, b) => resolve(a, monkeys) / resolve(b, monkeys),
+    }
 }
 
-fn part1(input: &Vec<Monkey>) -> i64 {
+fn part1(input: &[Monkey]) -> i64 {
     let monkeys: HashMap<&str,&Monkey> = HashMap::from_iter(
         input.iter().map(|m| (m.name.as_str(), m)));
     resolve("root", &monkeys)
@@ -100,13 +99,13 @@ fn resolve_h(monkey: &str, monkeys: &HashMap<&str,&Monkey>, ops: &mut Vec<HOp>) 
         Op::Sub(a, b) |
         Op::Mul(a, b) |
         Op::Div(a, b) => {
-            res_a = resolve_h(&a, monkeys, ops);
-            res_b = resolve_h(&b, monkeys, ops);
+            res_a = resolve_h(a, monkeys, ops);
+            res_b = resolve_h(b, monkeys, ops);
         },
     };
     match (res_a, res_b) {
         (Res::Const(a), Res::Const(b)) => {
-            return Res::Const(
+            Res::Const(
                 match op {
                     Op::Add(_,_) => a + b,
                     Op::Sub(_,_) => a - b,
@@ -114,7 +113,7 @@ fn resolve_h(monkey: &str, monkeys: &HashMap<&str,&Monkey>, ops: &mut Vec<HOp>) 
                     Op::Div(_,_) => a / b,
                     _ => panic!(),
                 }
-            );
+            )
         },
         (Res::Const(a_val), Res::Op(b_idx)) => {
             let hop = match op {
@@ -126,7 +125,7 @@ fn resolve_h(monkey: &str, monkeys: &HashMap<&str,&Monkey>, ops: &mut Vec<HOp>) 
             };
             let idx = ops.len();
             ops.push(hop);
-            return Res::Op(idx);
+            Res::Op(idx)
         },
         (Res::Op(a_idx), Res::Const(b_val)) => {
             let hop = match op {
@@ -138,14 +137,14 @@ fn resolve_h(monkey: &str, monkeys: &HashMap<&str,&Monkey>, ops: &mut Vec<HOp>) 
             };
             let idx = ops.len();
             ops.push(hop);
-            return Res::Op(idx);
+            Res::Op(idx)
         },
         (Res::Op(_), Res::Op(_)) => panic!(),
     }
 }
 
 #[allow(dead_code)]
-fn show(idx: usize, ops: &Vec<HOp>) -> String {
+fn show(idx: usize, ops: &[HOp]) -> String {
     match ops[idx] {
         HOp::Human => "X".into(),
         HOp::Add(val, i) => format!("({} + {})", val, show(i, ops)),
@@ -157,7 +156,7 @@ fn show(idx: usize, ops: &Vec<HOp>) -> String {
     }
 }
 
-fn solve(initialvalue: i64, initialidx: usize, ops: &Vec<HOp>) -> i64 {
+fn solve(initialvalue: i64, initialidx: usize, ops: &[HOp]) -> i64 {
     let mut value = initialvalue;
     let mut idx = initialidx;
     loop {
@@ -173,7 +172,7 @@ fn solve(initialvalue: i64, initialidx: usize, ops: &Vec<HOp>) -> i64 {
     };
 }
 
-fn part2(input: &Vec<Monkey>) -> i64 {
+fn part2(input: &[Monkey]) -> i64 {
     let monkeys: HashMap<&str,&Monkey> = HashMap::from_iter(
         input.iter().map(|m| (m.name.as_str(), m)));
     let root = monkeys["root"];
@@ -185,8 +184,8 @@ fn part2(input: &Vec<Monkey>) -> i64 {
         _ => panic!(),
     };
     let mut ops: Vec<HOp> = Vec::new();
-    let av = resolve_h(&a, &monkeys, &mut ops);
-    let bv = resolve_h(&b, &monkeys, &mut ops);
+    let av = resolve_h(a, &monkeys, &mut ops);
+    let bv = resolve_h(b, &monkeys, &mut ops);
     let (val, opidx) = match (av, bv) {
         (Res::Const(v), Res::Op(idx)) |
         (Res::Op(idx), Res::Const(v)) => (v, idx),

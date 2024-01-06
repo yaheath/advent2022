@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::str::FromStr;
 use std::vec::Vec;
-use json;
+
 use json::JsonValue;
 use ya_advent_lib::read::read_grouped_input;
 
@@ -35,14 +35,14 @@ fn check_order(left: &JsonValue, right: &JsonValue) -> Ordering {
             l.len().cmp(&r.len())
         },
         (JsonValue::Number(l), JsonValue::Array(r)) =>
-            check_order(&JsonValue::Array(vec![JsonValue::Number(l.clone())]), &JsonValue::Array(r.to_vec())),
+            check_order(&JsonValue::Array(vec![JsonValue::Number(*l)]), &JsonValue::Array(r.to_vec())),
         (JsonValue::Array(l), JsonValue::Number(r)) =>
-            check_order(&JsonValue::Array(l.to_vec()), &JsonValue::Array(vec![JsonValue::Number(r.clone())])),
+            check_order(&JsonValue::Array(l.to_vec()), &JsonValue::Array(vec![JsonValue::Number(*r)])),
         _ => panic!(),
     }
 }
 
-fn part1(input: &Vec<Vec<JsonValueWrapper>>) -> usize {
+fn part1(input: &[Vec<JsonValueWrapper>]) -> usize {
     let mut correct_pairs: Vec<usize> = Vec::new();
     for (idx, row) in input.iter().enumerate() {
         let result = check_order(&row[0].0, &row[1].0);
@@ -55,7 +55,7 @@ fn part1(input: &Vec<Vec<JsonValueWrapper>>) -> usize {
     correct_pairs.iter().sum()
 }
 
-fn part2(input: &Vec<Vec<JsonValueWrapper>>) -> usize {
+fn part2(input: &[Vec<JsonValueWrapper>]) -> usize {
     let mut items:Vec<&JsonValue> = input.iter().flatten().map(|x| &x.0).collect();
     let div1 = json::parse("[[2]]").unwrap();
     let div2 = json::parse("[[6]]").unwrap();

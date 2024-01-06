@@ -73,17 +73,19 @@ impl Pos {
                 Cell::Open => { self.x = nx; self.y = ny; return; },
                 Cell::Wall => { return; },
                 Cell::Wrap(wx, wy, wd) => {
-                    match grid.get(wx, wy) {
-                        Cell::Open => { self.x = wx; self.y = wy; self.dir = wd; },
-                        _ => {},
+                    if matches!(grid.get(wx, wy), Cell::Open) {
+                        self.x = wx;
+                        self.y = wy;
+                        self.dir = wd;
                     };
                     return;
                 },
                 Cell::WrapCorner(w1, w2) => {
                     let (wx, wy, wd) = if w1.0 == self.x && w1.1 == self.y { w2 } else { w1 };
-                    match grid.get(wx, wy) {
-                        Cell::Open => { self.x = wx; self.y = wy; self.dir = wd; },
-                        _ => {},
+                    if matches!(grid.get(wx, wy), Cell::Open) {
+                        self.x = wx;
+                        self.y = wy;
+                        self.dir = wd;
                     };
                     return;
                 },
@@ -246,12 +248,12 @@ fn fold(grid: &mut Grid<Cell>) {
     );
 }
 
-fn part(grid: &mut Grid<Cell>, moves: &Vec<Move>, partnum:i64) -> i64 {
+fn part(grid: &mut Grid<Cell>, moves: &[Move], partnum:i64) -> i64 {
     let mut pos = Pos {x: 0, y: 0, dir: Dir::Right};
     for x in grid.x_bounds() {
-        match grid.get(x, 0) {
-            Cell::Open => { pos.x = x; break; },
-            _ => {},
+        if matches!(grid.get(x, 0), Cell::Open) {
+            pos.x = x;
+            break;
         }
     }
     if partnum == 2 {

@@ -30,15 +30,13 @@ impl FromStr for Instr {
 }
 
 fn check_signal(x: i32, cycle: i32) -> i32 {
-    if cycle >= 20 && cycle <= 220 {
-        if (cycle - 20) % 40 == 0 {
-            return cycle * x;
-        }
+    if (20..=220).contains(&cycle) && (cycle - 20) % 40 == 0 {
+        return cycle * x;
     }
     0
 }
 
-fn run<F>(input: &Vec<Instr>, mut callback: F)
+fn run<F>(input: &[Instr], mut callback: F)
         where F: FnMut(i32, i32) {
     let mut x: i32 = 1;
     let mut cycle: i32 = 0;
@@ -56,9 +54,9 @@ fn run<F>(input: &Vec<Instr>, mut callback: F)
     }
 }
 
-fn part1(input: &Vec<Instr>) -> i32 {
+fn part1(input: &[Instr]) -> i32 {
     let mut signal = 0i32;
-    run(&input, |x, c| { signal += check_signal(x, c); });
+    run(input, |x, c| { signal += check_signal(x, c); });
     signal
 }
 
@@ -67,9 +65,9 @@ fn check_pixel(x:i32, c:i32) -> bool {
     (x - xm).abs() <= 1
 }
 
-fn part2(input: &Vec<Instr>) -> String {
+fn part2(input: &[Instr]) -> String {
     let mut out = String::new();
-    run(&input, |x, cycle| {
+    run(input, |x, cycle| {
         out.push(if check_pixel(x, cycle) { '#' } else { '.' });
         if cycle % 40 == 0 {
             out.push('\n');

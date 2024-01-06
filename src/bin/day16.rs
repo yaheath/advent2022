@@ -33,7 +33,7 @@ impl FromStr for Valve {
             Ok(Valve {
                 name: str_to_valveid(caps.get(1).unwrap().as_str()),
                 rate: caps.get(2).unwrap().as_str().parse::<Flow>().unwrap(),
-                neighbors: caps.get(3).unwrap().as_str().split(", ").map(|s| str_to_valveid(s)).collect(),
+                neighbors: caps.get(3).unwrap().as_str().split(", ").map(str_to_valveid).collect(),
             })
         }
         else {
@@ -121,7 +121,7 @@ fn search(valves: &HashMap<ValveId,Valve>, dxmap: &HashMap<(ValveId,ValveId), Mi
             .and_modify(|val| *val = state.total_release.max(*val))
             .or_insert(state.total_release);
 
-        for newstate in state.branch(valves, &dxmap) {
+        for newstate in state.branch(valves, dxmap) {
             q.push_back(newstate);
         }
     }
@@ -130,7 +130,7 @@ fn search(valves: &HashMap<ValveId,Valve>, dxmap: &HashMap<(ValveId,ValveId), Mi
 
 fn part1(input: &HashMap<ValveId,Valve>, dxmap: &HashMap<(ValveId,ValveId), Minute>) -> Flow {
     let states = search(input, dxmap, 30);
-    states.iter().map(|(_,v)| *v).max().unwrap()
+    states.values().copied().max().unwrap()
 }
 
 fn part2(input: &HashMap<ValveId,Valve>, dxmap: &HashMap<(ValveId,ValveId), Minute>) -> Flow {
@@ -145,7 +145,7 @@ fn part2(input: &HashMap<ValveId,Valve>, dxmap: &HashMap<(ValveId,ValveId), Minu
 }
 
 fn setup(input: Vec<Valve>) -> (HashMap<ValveId, Valve>, HashMap<(ValveId,ValveId), Minute>) {
-    let valves: HashMap<ValveId, Valve> = input.iter().map(|r| (r.name.clone(), r.clone())).collect();
+    let valves: HashMap<ValveId, Valve> = input.iter().map(|r| (r.name, r.clone())).collect();
     let dxmap: HashMap<(ValveId,ValveId), Minute> =
         valves
         .iter()

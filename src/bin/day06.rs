@@ -2,7 +2,7 @@ use std::collections::{HashSet, VecDeque};
 use std::vec::Vec;
 use ya_advent_lib::read::read_input;
 
-fn find_marker(input: &String, n_distinct: usize) -> usize {
+fn find_marker(input: &str, n_distinct: usize) -> usize {
     let mut four: VecDeque<char> = VecDeque::with_capacity(n_distinct + 1);
     for (i, c) in input.chars().enumerate() {
         four.push_back(c);
@@ -16,14 +16,14 @@ fn find_marker(input: &String, n_distinct: usize) -> usize {
             }
         }
     }
-    return 0;
+    0
 }
 
-fn part1(input: &Vec<String>) -> usize {
+fn part1(input: &[String]) -> usize {
     find_marker(&input[0], 4)
 }
 
-fn part2(input: &Vec<String>) -> usize {
+fn part2(input: &[String]) -> usize {
     find_marker(&input[0], 14)
 }
 

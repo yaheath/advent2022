@@ -36,24 +36,23 @@ fn priority(c: char) -> i32 {
     }
 }
 
-fn part1(input: &Vec<Rucksack>) -> i32 {
+fn part1(input: &[Rucksack]) -> i32 {
     input.iter()
         .map(|r| r.common())
-        .map(|c| priority(c))
+        .map(priority)
         .sum()
 }
 
-fn part2(input: &Vec<Rucksack>) -> i32 {
+fn part2(input: &[Rucksack]) -> i32 {
     input.chunks(3)
         .map(|chunk|
             *(chunk[0].all
-                .intersection(&chunk[1].all)
-                .map(|c| *c)
+                .intersection(&chunk[1].all).copied()
                 .collect::<HashSet<char>>()
                 .intersection(&chunk[2].all)
                 .next()
                 .unwrap())
-        ).map(|c| priority(c))
+        ).map(priority)
         .sum()
 }
 

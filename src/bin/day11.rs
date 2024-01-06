@@ -88,7 +88,7 @@ struct Monkey {
     inspections: i64,
 }
 
-fn make_monkeys(input: &Vec<Input>) -> Vec<Monkey> {
+fn make_monkeys(input: &[Input]) -> Vec<Monkey> {
     let mut monkeys:Vec<Monkey> = Vec::new();
     let mut op:Operation = Operation::Square;
     let mut div:i64 = 0;
@@ -106,11 +106,11 @@ fn make_monkeys(input: &Vec<Input>) -> Vec<Monkey> {
             Input::FalseTarget(n) => {
                 let false_target = *n;
                 monkeys.push(Monkey{
-                    items: items,
-                    op: op,
+                    items,
+                    op,
                     divisible: div,
-                    true_target: true_target,
-                    false_target: false_target,
+                    true_target,
+                    false_target,
                     inspections: 0,
                 });
                 items = VecDeque::new();
@@ -124,8 +124,8 @@ fn make_monkeys(input: &Vec<Input>) -> Vec<Monkey> {
     monkeys
 }
 
-fn monkey_step(id: usize, modulo: i64, monkeys: &mut Vec<Monkey>) -> bool {
-    if monkeys[id].items.len() == 0 { return false; }
+fn monkey_step(id: usize, modulo: i64, monkeys: &mut [Monkey]) -> bool {
+    if monkeys[id].items.is_empty() { return false; }
     let mut item = monkeys.get_mut(id).unwrap().items.pop_front().unwrap();
     monkeys.get_mut(id).unwrap().inspections += 1;
     match monkeys[id].op {
@@ -144,10 +144,10 @@ fn monkey_step(id: usize, modulo: i64, monkeys: &mut Vec<Monkey>) -> bool {
         monkeys[id].false_target
     };
     monkeys.get_mut(target).unwrap().items.push_back(item);
-    monkeys[id].items.len() > 0
+    !monkeys[id].items.is_empty()
 }
 
-fn bothparts(input: &Vec<Input>, part2: bool) -> i64 {
+fn bothparts(input: &[Input], part2: bool) -> i64 {
     let mut monkeys = make_monkeys(input);
     let (steps, modulo) = if part2 {
         (10000, monkeys.iter().map(|m| m.divisible).product())

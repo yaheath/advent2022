@@ -23,16 +23,16 @@ impl DirTree {
         };
         let mut nodes: HashMap<String, DirNode> = HashMap::new();
         nodes.insert("/".into(), root);
-        DirTree { nodes: nodes }
+        DirTree { nodes }
     }
 
     fn size(&self, path: &str) -> usize {
         let dir = self.nodes.get(path).unwrap();
 
         dir.children.iter().map(
-              |c| self.size(Path::new(path).join(&c).to_str().unwrap().into())
+              |c| self.size(Path::new(path).join(c).to_str().unwrap())
             ).sum::<usize>()
-         + dir.files.iter().map(|(_, size)| size).sum::<usize>()
+         + dir.files.values().sum::<usize>()
     }
 
     fn mkdir(&mut self, cwd: &str, name: &str) {
@@ -113,7 +113,7 @@ impl FromStr for Input {
     }
 }
 
-fn build_tree(input: &Vec<Input>) -> DirTree {
+fn build_tree(input: &[Input]) -> DirTree {
     let mut tree: DirTree = DirTree::new();
     let mut cwd:PathBuf = PathBuf::from("/");
     for row in input {
@@ -127,10 +127,10 @@ fn build_tree(input: &Vec<Input>) -> DirTree {
                 }
             },
             Input::File(ifile) => {
-                tree.mkfile(&cwd.to_str().unwrap(), &ifile.name, ifile.size);
+                tree.mkfile(cwd.to_str().unwrap(), &ifile.name, ifile.size);
             },
             Input::Dir(idir) => {
-                tree.mkdir(&cwd.to_str().unwrap(), &idir.name);
+                tree.mkdir(cwd.to_str().unwrap(), &idir.name);
             },
             Input::Empty => {},
         }
@@ -145,19 +145,19 @@ fn search(tree: &DirTree, dir: &str, thresh: usize, bigger: bool, results: &mut 
     }
     let dirnode = tree.get(dir);
     for c in dirnode.children.iter() {
-        let path:String = Path::new(&dir).join(&c).to_str().unwrap().into();
+        let path:String = Path::new(&dir).join(c).to_str().unwrap().into();
         search(tree, &path, thresh, bigger, results);
     }
 }
 
-fn part1(input: &Vec<Input>) -> usize {
+fn part1(input: &[Input]) -> usize {
     let tree = build_tree(input);
     let mut results: Vec<usize> = Vec::new();
     search(&tree, "/", 100000, false, &mut results);
     results.iter().sum()
 }
 
-fn part2(input: &Vec<Input>) -> usize {
+fn part2(input: &[Input]) -> usize {
     let tree = build_tree(input);
     let total = tree.size("/");
     let needed = 30000000 - (70000000 - total);
