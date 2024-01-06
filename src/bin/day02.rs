@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use std::vec::Vec;
 use lazy_static::lazy_static;
-use advent_lib::read::read_input;
+use ya_advent_lib::read::read_input;
 
 #[derive(Debug, Eq, PartialEq, Hash)]
 enum Move {
@@ -141,7 +141,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::test_input;
+    use ya_advent_lib::read::test_input;
 
     #[test]
     fn day02_test() {

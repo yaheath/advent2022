@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use std::ops::Range;
 use std::str::FromStr;
 use regex::Regex;
-use advent_lib::read::read_input;
-use advent_lib::range::merge_ranges;
+use ya_advent_lib::read::read_input;
+use ya_advent_lib::range::merge_ranges;
 
 struct Sensor {
     loc: (i64,i64),
@@ -115,7 +115,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::test_input;
+    use ya_advent_lib::read::test_input;
 
     #[test]
     fn day15_test() {

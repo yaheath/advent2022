@@ -1,7 +1,7 @@
 use std::str::FromStr;
 use std::vec::Vec;
-use advent_lib::read::read_input;
-use advent_lib::infinite_grid::InfiniteGrid;
+use ya_advent_lib::read::read_input;
+use ya_advent_lib::infinite_grid::InfiniteGrid;
 
 struct CoordList {
     list: Vec<(i64,i64)>
@@ -122,12 +122,12 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::test_input;
+    use ya_advent_lib::read::test_input;
 
     #[test]
     fn day14_test() {
         let input: Vec<CoordList> = test_input(include_str!("day14.testinput"));
-        assert_eq!(part1(&input), 64);
-        assert_eq!(part2(&input), 58);
+        assert_eq!(part1(&input), 24);
+        assert_eq!(part2(&input), 93);
     }
 }

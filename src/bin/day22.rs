@@ -2,8 +2,8 @@
 //use std::cmp::min;
 use std::vec::Vec;
 use regex::Regex;
-use advent_lib::grid::Grid;
-use advent_lib::read::read_grouped_input;
+use ya_advent_lib::grid::Grid;
+use ya_advent_lib::read::read_grouped_input;
 
 #[derive(Debug, Copy, Clone)]
 enum Cell {
@@ -12,6 +12,17 @@ enum Cell {
     Wall,
     Wrap(i64, i64, Dir),
     WrapCorner((i64, i64, Dir),(i64, i64, Dir)),
+}
+
+impl From<char> for Cell {
+    fn from(c: char) -> Self {
+        match c {
+            ' ' => Cell::Void,
+            '#' => Cell::Wall,
+            '.' => Cell::Open,
+            _ => panic!(),
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -253,12 +264,7 @@ fn part(grid: &mut Grid<Cell>, moves: &Vec<Move>, partnum:i64) -> i64 {
 }
 
 fn setup(input: Vec<Vec<String>>) -> (Grid<Cell>, Vec<Move>) {
-    let grid: Grid<Cell> = Grid::from_input(&input[0], Cell::Void, 1, |c| match c {
-        ' ' => Cell::Void,
-        '#' => Cell::Wall,
-        '.' => Cell::Open,
-        _ => panic!(),
-    });
+    let grid: Grid<Cell> = Grid::from_input(&input[0], Cell::Void, 1);
     let moves: Vec<Move> =
         Regex::new(r"(\d+)|([LR])").unwrap()
         .find_iter(&input[1][0])
@@ -281,7 +287,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::grouped_test_input;
+    use ya_advent_lib::read::grouped_test_input;
 
     #[test]
     fn day22_test() {

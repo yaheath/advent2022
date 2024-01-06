@@ -2,7 +2,7 @@ use std::convert::From;
 use std::fmt;
 use std::str::FromStr;
 use std::vec::Vec;
-use advent_lib::read::read_input;
+use ya_advent_lib::read::read_input;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 struct Snafu(i64);
@@ -72,7 +72,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::test_input;
+    use ya_advent_lib::read::test_input;
 
     #[test]
     fn snafu_test() {

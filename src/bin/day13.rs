@@ -3,7 +3,7 @@ use std::str::FromStr;
 use std::vec::Vec;
 use json;
 use json::JsonValue;
-use advent_lib::read::read_grouped_input;
+use ya_advent_lib::read::read_grouped_input;
 
 struct JsonValueWrapper(JsonValue);
 
@@ -76,7 +76,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::grouped_test_input;
+    use ya_advent_lib::read::grouped_test_input;
 
     #[test]
     fn day13_test() {

@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::cmp::{min, max};
 use std::ops::Range;
 use std::vec::Vec;
-use advent_lib::infinite_grid::InfiniteGrid;
-use advent_lib::read::read_input;
+use ya_advent_lib::infinite_grid::InfiniteGrid;
+use ya_advent_lib::read::read_input;
 
 #[derive(Copy, Clone)]
 enum Cell {
@@ -160,11 +160,11 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::test_input;
+    use ya_advent_lib::read::test_input;
 
     #[test]
     fn day23_test() {
-        let input: Vec<Pair> = test_input(include_str!("day23.testinput"));
+        let input: Vec<String> = test_input(include_str!("day23.testinput"));
         assert_eq!(part1(&input), 110);
         assert_eq!(part2(&input), 20);
     }

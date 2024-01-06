@@ -1,7 +1,7 @@
 use std::collections::{BinaryHeap, HashSet, HashMap};
 use std::cmp::Ordering;
 use std::vec::Vec;
-use advent_lib::read::read_input;
+use ya_advent_lib::read::read_input;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 enum Dir {
@@ -228,7 +228,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::test_input;
+    use ya_advent_lib::read::test_input;
 
     #[test]
     fn day24_test() {

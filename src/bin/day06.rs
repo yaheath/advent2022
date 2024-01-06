@@ -1,6 +1,6 @@
 use std::collections::{HashSet, VecDeque};
 use std::vec::Vec;
-use advent_lib::read::read_input;
+use ya_advent_lib::read::read_input;
 
 fn find_marker(input: &String, n_distinct: usize) -> usize {
     let mut four: VecDeque<char> = VecDeque::with_capacity(n_distinct + 1);
@@ -36,7 +36,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::test_input;
+    use ya_advent_lib::read::test_input;
 
     #[test]
     fn day06_test() {

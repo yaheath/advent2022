@@ -2,31 +2,12 @@ use std::collections::HashSet;
 use std::str::FromStr;
 use lazy_static::lazy_static;
 use regex::Regex;
-use advent_lib::read::read_input;
-
-enum Dir {
-    Left,
-    Right,
-    Up,
-    Down,
-}
-
-impl FromStr for Dir {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.chars().next().unwrap() {
-            'L' => Ok(Dir::Left),
-            'R' => Ok(Dir::Right),
-            'U' => Ok(Dir::Up),
-            'D' => Ok(Dir::Down),
-            _ => Err("invalid direction".into()),
-        }
-    }
-}
+use ya_advent_lib::read::read_input;
+use ya_advent_lib::coords::{CDir, Coord2D};
 
 struct Move {
-    dir: Dir,
-    steps: i32,
+    dir: CDir,
+    steps: i64,
 }
 
 impl FromStr for Move {
@@ -36,9 +17,16 @@ impl FromStr for Move {
             static ref RE: Regex = Regex::new(r"(\w) (\d+)").unwrap();
         }
         if let Some(caps) = RE.captures(s) {
+            let dir = match caps.get(1).unwrap().as_str() {
+                "L" => CDir::W,
+                "R" => CDir::E,
+                "U" => CDir::N,
+                "D" => CDir::S,
+                _ => panic!(),
+            };
             Ok(Move {
-                dir: caps.get(1).unwrap().as_str().parse::<Dir>().unwrap(),
-                steps: caps.get(2).unwrap().as_str().parse::<i32>().unwrap(),
+                dir,
+                steps: caps.get(2).unwrap().as_str().parse::<i64>().unwrap(),
             })
         }
         else {
@@ -47,18 +35,12 @@ impl FromStr for Move {
     }
 }
 
-#[derive(Copy, Clone, Hash, Eq, PartialEq)]
-struct Knot {
-    x: i32,
-    y: i32,
+trait MoveToward {
+    fn move_toward(&mut self, other: &Self);
 }
 
-impl Knot {
-    fn new() -> Knot {
-        Knot { x: 0, y: 0 }
-    }
-
-    fn move_toward(&mut self, other: &Knot) {
+impl MoveToward for Coord2D {
+    fn move_toward(&mut self, other: &Coord2D) {
         if other.x == self.x {
             let diff = other.y - self.y;
             if diff > 1 {
@@ -89,17 +71,12 @@ impl Knot {
 }
 
 fn do_moves(input: &Vec<Move>, depth: usize) -> usize {
-    let mut visited: HashSet<Knot> = HashSet::new();
-    let mut chain = vec![Knot::new(); depth];
+    let mut visited: HashSet<Coord2D> = HashSet::new();
+    let mut chain = vec![Coord2D::new(0,0); depth];
     for mv in input {
         for _ in 0..mv.steps {
             let head = chain.get_mut(0).unwrap();
-            match mv.dir {
-                Dir::Left => { head.x -= 1; }
-                Dir::Right => { head.x += 1; }
-                Dir::Up => { head.y += 1; }
-                Dir::Down => { head.y -= 1; }
-            }
+            *head += mv.dir;
             for i in 1..depth {
                 let prev = chain[i-1];
                 let cur = chain.get_mut(i).unwrap();
@@ -128,7 +105,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::test_input;
+    use ya_advent_lib::read::test_input;
 
     #[test]
     fn day09_test() {

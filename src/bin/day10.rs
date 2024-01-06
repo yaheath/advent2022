@@ -2,7 +2,7 @@
 use std::vec::Vec;
 use std::str::FromStr;
 use regex::Regex;
-use advent_lib::read::read_input;
+use ya_advent_lib::read::read_input;
 
 enum Instr {
     Addx(i32),
@@ -87,7 +87,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::test_input;
+    use ya_advent_lib::read::test_input;
 
     #[test]
     fn day10_test() {

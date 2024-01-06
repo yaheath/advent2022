@@ -5,7 +5,7 @@ use std::str::FromStr;
 use std::vec::Vec;
 use itertools::Itertools;
 use regex::Regex;
-use advent_lib::read::read_input;
+use ya_advent_lib::read::read_input;
 
 type ValveId = [char;2];
 type Flow = i32;
@@ -167,7 +167,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::test_input;
+    use ya_advent_lib::read::test_input;
 
     #[test]
     fn day16_test() {

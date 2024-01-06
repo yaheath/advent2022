@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
-use advent_lib::read::read_input;
-use advent_lib::grid::Grid;
+use ya_advent_lib::read::read_input;
+use ya_advent_lib::grid::Grid;
 
 #[derive(Copy, Clone, PartialEq)]
 enum Cell {
@@ -18,6 +18,16 @@ impl Cell {
             Cell::Start => 0,
             Cell::End => 25,
             Cell::Uninitialized => 100,
+        }
+    }
+}
+impl From<char> for Cell {
+    fn from(value: char) -> Self {
+        match value {
+            'S' => Cell::Start,
+            'E' => Cell::End,
+            'a'..='z' => Cell::Elev((value as u8) - b'a'),
+            _ => Cell::Uninitialized,
         }
     }
 }
@@ -116,12 +126,7 @@ fn part2(grid: &Grid<Cell>) -> i64 {
 }
 
 fn mkgrid(input: Vec<String>) -> Grid<Cell> {
-    Grid::from_input(&input, Cell::Uninitialized, 0, |c| match c {
-        'S' => Cell::Start,
-        'E' => Cell::End,
-        'a'..='z' => Cell::Elev((c as u8) - b'a'),
-        _ => Cell::Uninitialized,
-    })
+    Grid::from_input(&input, Cell::Uninitialized, 0)
 }
 
 fn main() {
@@ -134,7 +139,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::test_input;
+    use ya_advent_lib::read::test_input;
 
     #[test]
     fn day12_test() {

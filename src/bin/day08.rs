@@ -1,6 +1,6 @@
 use std::ops::Range;
-use advent_lib::read::read_input;
-use advent_lib::grid::Grid;
+use ya_advent_lib::read::read_input;
+use ya_advent_lib::grid::Grid;
 
 fn visible(grid: &Grid<i8>, tx: i64, ty: i64) -> bool {
     let h = grid.get(tx, ty);
@@ -78,7 +78,7 @@ fn part2(grid: &Grid<i8>) -> usize {
 
 fn main() {
     let input = read_input::<String>();
-    let grid = Grid::from_input(&input, 0i8, 0, |c| (c as i8) - ('0' as i8));
+    let grid = Grid::from_input_map(&input, 0i8, 0, |c| (c as i8) - ('0' as i8));
 
     println!("Part 1: {}", part1(&grid));
     println!("Part 2: {}", part2(&grid));
@@ -87,12 +87,12 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::test_input;
+    use ya_advent_lib::read::test_input;
 
     #[test]
     fn day08_test() {
         let input: Vec<String> = test_input(include_str!("day08.testinput"));
-        let grid = Grid::from_input(&input, 0i8, 0, |c| (c as i8) - ('0' as i8));
+        let grid = Grid::from_input_map(&input, 0i8, 0, |c| (c as i8) - ('0' as i8));
         assert_eq!(part1(&grid), 21);
         assert_eq!(part2(&grid), 8);
     }

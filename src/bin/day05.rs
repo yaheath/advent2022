@@ -2,7 +2,7 @@ use std::vec::Vec;
 use std::str::FromStr;
 use lazy_static::lazy_static;
 use regex::Regex;
-use advent_lib::read::read_sectioned_input;
+use ya_advent_lib::read::read_sectioned_input;
 
 struct Movement {
     n: i32,
@@ -105,7 +105,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use advent_lib::read::sectioned_test_input;
+    use ya_advent_lib::read::sectioned_test_input;
 
     #[test]
     fn day05_test() {
