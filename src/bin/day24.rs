@@ -174,38 +174,40 @@ impl Valley {
                     .map(|idx| self.blizzards[*idx].pos_at(state.step + 1, self.width, self.height).y).collect()
                 };
 
-            let mut add = |c: Coord2D, incr: i64| {
+            let mut add = |c: Coord2D| {
                 if c.x < 0 || c.y < -1 || (c.y == -1 && c.x != entrance.x)
                         || c.x >= self.width || c.y > self.height || (c.y == self.height && c.x != exit.x) {
                     return;
                 }
-                let new_gscore = gscore[&(state.pos, state.step)] + incr;
+                let new_gscore = gscore[&(state.pos, state.step)] + 1;
                 //println!("add {:?} new_gscore={}", c, new_gscore);
                 if !gscore.contains_key(&(c,state.step+1)) || new_gscore < gscore[&(c,state.step+1)] {
                     gscore.insert((c, state.step + 1), new_gscore);
                     //came_from.insert((c, state.step + 1), (state.pos, state.step));
                     heap.push(State {
                         pos: c,
-                        dist: new_gscore + c.mdist_to(if leg & 1 == 1 { &entrance } else { &exit }) + (nlegs - 1 - leg) * entrance.mdist_to(&exit),
+                        dist: new_gscore
+                            + c.mdist_to(if leg & 1 == 1 { &entrance } else { &exit })
+                            + (nlegs - 1 - leg) * entrance.mdist_to(&exit),
                         step: state.step + 1,
                         leg,
                     });
                 }
             };
             if !col.contains(&(state.pos.y - 1)) && !n_row.contains(&state.pos.x) {
-                add(Coord2D::new(state.pos.x, state.pos.y - 1), 1);
+                add(Coord2D::new(state.pos.x, state.pos.y - 1));
             }
             if !col.contains(&(state.pos.y + 1)) && !s_row.contains(&state.pos.x) {
-                add(Coord2D::new(state.pos.x, state.pos.y + 1), 1);
+                add(Coord2D::new(state.pos.x, state.pos.y + 1));
             }
             if !row.contains(&(state.pos.x + 1)) && !e_col.contains(&state.pos.y) {
-                add(Coord2D::new(state.pos.x + 1, state.pos.y), 1);
+                add(Coord2D::new(state.pos.x + 1, state.pos.y));
             }
             if !row.contains(&(state.pos.x - 1)) && !w_col.contains(&state.pos.y) {
-                add(Coord2D::new(state.pos.x - 1, state.pos.y), 1);
+                add(Coord2D::new(state.pos.x - 1, state.pos.y));
             }
             if !row.contains(&state.pos.x) && !col.contains(&state.pos.y) {
-                add(state.pos, 1);
+                add(state.pos);
             }
         }
         panic!("no path found");
